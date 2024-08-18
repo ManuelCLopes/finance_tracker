@@ -1,0 +1,156 @@
+import 'package:flutter/material.dart';
+import '../databases/investment_dao.dart';
+import '../models/investment.dart';
+import 'package:intl/intl.dart';
+
+class InvestmentForm extends StatefulWidget {
+  final Investment? investment;
+
+  InvestmentForm({this.investment});
+
+  @override
+  _InvestmentFormState createState() => _InvestmentFormState();
+}
+
+class _InvestmentFormState extends State<InvestmentForm> {
+  final _formKey = GlobalKey<FormState>();
+  final InvestmentDao _investmentDao = InvestmentDao();
+  final List<String> _investmentTypes = ['Stocks', 'Bonds', 'Real Estate', 'Mutual Funds', 'Other'];
+
+  late String _selectedType;
+  late TextEditingController _initialValueController;
+  late TextEditingController _currentValueController;
+  late TextEditingController _dateController;
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedType = widget.investment?.investmentType ?? _investmentTypes.first;
+    _initialValueController = TextEditingController(text: widget.investment?.initialValue.toString() ?? '');
+    _currentValueController = TextEditingController(text: widget.investment?.currentValue.toString() ?? '');
+    _selectedDate = widget.investment != null ? DateTime.parse(widget.investment!.dateInvested) : DateTime.now();
+    _dateController = TextEditingController(text: _formatDate(_selectedDate!));
+  }
+
+  @override
+  void dispose() {
+    _initialValueController.dispose();
+    _currentValueController.dispose();
+    _dateController.dispose();
+    super.dispose();
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('yyyy-MM-dd').format(date);
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate!,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = _formatDate(picked);
+      });
+    }
+  }
+
+  void _saveInvestment() async {
+    if (_formKey.currentState!.validate()) {
+      final investment = Investment(
+        id: widget.investment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: '1', // Replace with actual user ID
+        investmentType: _selectedType,
+        initialValue: double.tryParse(_initialValueController.text) ?? 0,
+        currentValue: double.tryParse(_currentValueController.text) ?? 0,
+        dateInvested: _formatDate(_selectedDate!),
+      );
+
+      if (widget.investment == null) {
+        await _investmentDao.insertInvestment(investment);
+      } else {
+        await _investmentDao.updateInvestment(investment);
+      }
+
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.investment == null ? 'Add Investment' : 'Edit Investment'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                items: _investmentTypes.map((String type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedType = value!;
+                  });
+                },
+                decoration: InputDecoration(labelText: 'Investment Type'),
+              ),
+              TextFormField(
+                controller: _initialValueController,
+                decoration: InputDecoration(labelText: 'Initial Value'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an initial value';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _currentValueController,
+                decoration: InputDecoration(labelText: 'Current Value'),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a current value';
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: _dateController,
+                decoration: InputDecoration(
+                  labelText: 'Date Invested',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.calendar_today),
+                    onPressed: () => _selectDate(context),
+                  ),
+                ),
+                readOnly: true,
+                onTap: () => _selectDate(context),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _saveInvestment,
+                child: Text('Save Investment'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
