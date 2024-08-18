@@ -1,11 +1,12 @@
+import 'package:finance_tracker/databases/expense_category_dao.dart';
 import 'package:flutter/material.dart';
 import '../databases/expense_dao.dart';
 import '../models/expense.dart';
+import '../models/expense_category.dart';
+import '../utils/app_scaffold.dart';
 import '../utils/no_data.dart';
 import 'expense_form.dart';
 import 'package:intl/intl.dart';
-
-import 'home_screen.dart';
 
 class ExpenseScreen extends StatefulWidget {
   ExpenseScreen({Key? key}) : super(key: key);
@@ -19,9 +20,12 @@ class ExpenseScreen extends StatefulWidget {
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
   final ExpenseDao _expenseDao = ExpenseDao();
+  final ExpenseCategoryDao _expenseCategoryDao = ExpenseCategoryDao();
+
   List<Expense> _expenses = [];
   bool _hasData = true;
   double _totalCurrentMonthExpenses = 0.0;
+  Map<int, String> _categoryMap = {};  // Map with int keys and String values
 
   @override
   void initState() {
@@ -29,12 +33,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     _loadData();
   }
 
-  void loadData() {
-    _loadData(); // Public method to trigger data reload
-  }
-
   Future<void> _loadData() async {
     List<Expense> expenses = await _expenseDao.getAllExpenses();
+    List<ExpenseCategory> categories = await _expenseCategoryDao.getAllCategories();
+
     double totalCurrentMonthExpenses = 0.0;
 
     DateTime now = DateTime.now();
@@ -48,12 +50,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         totalCurrentMonthExpenses += expense.amount;
       }
     }
-    print("Total Expenses for ${DateFormat('MMMM').format(now)}: $totalCurrentMonthExpenses");
 
+    // Map category ID to name
     setState(() {
       _expenses = expenses;
       _hasData = expenses.isNotEmpty;
       _totalCurrentMonthExpenses = totalCurrentMonthExpenses;
+      _categoryMap = {for (var category in categories) category.id!: category.name};
     });
   }
 
@@ -74,10 +77,8 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Expenses'),
-      ),
+    return AppScaffold(
+      title: 'Expenses',
       body: _hasData ? _buildExpenseContent() : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditExpense(),
@@ -160,8 +161,10 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         ),
         Column(
           children: expenses.map((expense) {
+            String categoryName = _categoryMap[expense.categoryId] ?? 'Unknown';
+
             return ListTile(
-              title: Text(expense.category),
+              title: Text(categoryName),
               subtitle: Text(expense.dateSpent),
               onTap: () => _addOrEditExpense(expense: expense),
               trailing: Text(

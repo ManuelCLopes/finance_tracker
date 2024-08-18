@@ -3,6 +3,8 @@ import '../databases/investment_dao.dart';
 import '../models/investment.dart';
 import 'package:intl/intl.dart';
 
+import '../utils/app_scaffold.dart';
+
 class InvestmentForm extends StatefulWidget {
   final Investment? investment;
 
@@ -83,10 +85,8 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.investment == null ? 'Add Investment' : 'Edit Investment'),
-      ),
+    return AppScaffold(
+      title: widget.investment == null ? 'Add Investment' : 'Edit Investment',
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

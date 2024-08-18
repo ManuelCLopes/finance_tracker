@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../models/expense.dart';
+import '../models/expense_category.dart';
 import 'package:intl/intl.dart';
 
 class ExpenseForm extends StatefulWidget {
@@ -15,9 +17,10 @@ class ExpenseForm extends StatefulWidget {
 class _ExpenseFormState extends State<ExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   final ExpenseDao _expenseDao = ExpenseDao();
-  final List<String> _expenseCategories = ['Food', 'Rent', 'Transport', 'Entertainment', 'Other'];
+  final ExpenseCategoryDao _expenseCategoryDao = ExpenseCategoryDao();
 
-  late String _selectedCategory;
+  List<ExpenseCategory> _categories = [];
+  ExpenseCategory? _selectedCategory;
   late TextEditingController _amountController;
   late TextEditingController _dateController;
   DateTime? _selectedDate;
@@ -25,7 +28,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.expense?.category ?? _expenseCategories.first;
+    _loadCategories(); // Load categories when the form is initialized
     _amountController = TextEditingController(text: widget.expense?.amount.toString() ?? '');
     _selectedDate = widget.expense != null ? DateTime.parse(widget.expense!.dateSpent) : DateTime.now();
     _dateController = TextEditingController(text: _formatDate(_selectedDate!));
@@ -36,6 +39,16 @@ class _ExpenseFormState extends State<ExpenseForm> {
     _amountController.dispose();
     _dateController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadCategories() async {
+    List<ExpenseCategory> categories = await _expenseCategoryDao.getAllCategories();
+    setState(() {
+      _categories = categories;
+      _selectedCategory = widget.expense != null
+          ? _categories.firstWhere((category) => category.id == widget.expense!.categoryId)
+          : _categories.isNotEmpty ? _categories.first : null;
+    });
   }
 
   String _formatDate(DateTime date) {
@@ -62,7 +75,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
       final expense = Expense(
         id: widget.expense?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         userId: '1', // Replace with actual user ID
-        category: _selectedCategory,
+        categoryId: _selectedCategory!.id!, // Use the selected category's ID
         amount: double.tryParse(_amountController.text) ?? 0,
         dateSpent: _formatDate(_selectedDate!),
       );
@@ -89,20 +102,21 @@ class _ExpenseFormState extends State<ExpenseForm> {
           key: _formKey,
           child: Column(
             children: [
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<ExpenseCategory>(
                 value: _selectedCategory,
-                items: _expenseCategories.map((String category) {
+                items: _categories.map((category) {
                   return DropdownMenuItem(
                     value: category,
-                    child: Text(category),
+                    child: Text(category.name),
                   );
                 }).toList(),
-                onChanged: (value) {
+                onChanged: (ExpenseCategory? newValue) {
                   setState(() {
-                    _selectedCategory = value!;
+                    _selectedCategory = newValue;
                   });
                 },
                 decoration: InputDecoration(labelText: 'Category'),
+                validator: (value) => value == null ? 'Please select a category' : null,
               ),
               TextFormField(
                 controller: _amountController,

@@ -21,8 +21,9 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'finance_tracker.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -36,14 +37,30 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+      CREATE TABLE income_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE expense_categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
       CREATE TABLE incomes (
         id TEXT PRIMARY KEY,
         user_id TEXT,
+        category_id INTEGER,
         source TEXT,
         amount REAL,
         date_received TEXT,
         tax_amount REAL,
-        FOREIGN KEY(user_id) REFERENCES users(id)
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(category_id) REFERENCES income_categories(id)
       )
     ''');
 
@@ -51,10 +68,11 @@ class DatabaseHelper {
       CREATE TABLE expenses (
         id TEXT PRIMARY KEY,
         user_id TEXT,
-        category TEXT,
+        category_id INTEGER,
         amount REAL,
         date_spent TEXT,
-        FOREIGN KEY(user_id) REFERENCES users(id)
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(category_id) REFERENCES expense_categories(id)
       )
     ''');
 
@@ -93,5 +111,36 @@ class DatabaseHelper {
     ''');
   }
 
-  // CRUD operations for each table...
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  if (oldVersion < 2) {
+    // Step 1: Create the new table with the correct structure
+    await db.execute('''
+      CREATE TABLE new_incomes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        category_id TEXT,
+        source TEXT,
+        amount REAL,
+        date_received TEXT,
+        tax_amount REAL,
+        FOREIGN KEY(user_id) REFERENCES users(id),
+        FOREIGN KEY(category_id) REFERENCES income_categories(id)
+      )
+    ''');
+
+    // Step 2: Copy the data from the old table to the new table
+    await db.execute('''
+      INSERT INTO new_incomes (id, user_id, source, amount, date_received, tax_amount)
+      SELECT id, user_id, source, amount, date_received, tax_amount FROM incomes
+    ''');
+
+    // Step 3: Drop the old table
+    await db.execute('DROP TABLE incomes');
+
+    // Step 4: Rename the new table to the old table name
+    await db.execute('ALTER TABLE new_incomes RENAME TO incomes');
+  }
+}
+
+
 }

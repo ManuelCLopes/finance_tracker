@@ -1,28 +1,28 @@
 class Income {
   final String id;
   final String userId;
-  final String source;
+  final int categoryId; 
   final double amount;
-  final String dateReceived;
   final double taxAmount;
+  final String dateReceived;
 
   Income({
     required this.id,
     required this.userId,
-    required this.source,
+    required this.categoryId, 
     required this.amount,
-    required this.dateReceived,
     required this.taxAmount,
+    required this.dateReceived,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'user_id': userId,
-      'source': source,
+      'category_id': categoryId, 
       'amount': amount,
-      'date_received': dateReceived,
       'tax_amount': taxAmount,
+      'date_received': dateReceived,
     };
   }
 
@@ -30,10 +30,10 @@ class Income {
     return Income(
       id: map['id'],
       userId: map['user_id'],
-      source: map['source'],
+      categoryId: map['category_id'],
       amount: map['amount'],
-      dateReceived: map['date_received'],
       taxAmount: map['tax_amount'],
+      dateReceived: map['date_received'],
     );
   }
 }

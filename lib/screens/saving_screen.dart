@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../databases/savings_dao.dart';
 import '../models/savings.dart';
+import '../utils/app_scaffold.dart';
 
 class SavingsScreen extends StatefulWidget {
   @override
@@ -41,10 +42,8 @@ class _SavingsScreenState extends State<SavingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Savings'),
-      ),
+    return AppScaffold(
+      title: 'Savings',
       body: ListView.builder(
         itemCount: _savings.length,
         itemBuilder: (context, index) {

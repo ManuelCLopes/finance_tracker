@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../databases/user_dao.dart';
 import '../models/user.dart';
+import '../utils/app_scaffold.dart';
 
 class UserScreen extends StatefulWidget {
   @override
@@ -42,10 +43,8 @@ class _UserScreenState extends State<UserScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Users'),
-      ),
+    return AppScaffold(
+      title: 'Users',
       body: ListView.builder(
         itemCount: _users.length,
         itemBuilder: (context, index) {

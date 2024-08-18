@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../databases/income_dao.dart';
+import '../databases/income_category_dao.dart';
 import '../models/income.dart';
-import 'package:intl/intl.dart'; // For formatting dates
+import '../models/income_category.dart';
+import 'package:intl/intl.dart';
+import '../utils/app_scaffold.dart'; 
 
 class IncomeForm extends StatefulWidget {
   final Income? income;
@@ -15,9 +18,10 @@ class IncomeForm extends StatefulWidget {
 class _IncomeFormState extends State<IncomeForm> {
   final _formKey = GlobalKey<FormState>();
   final IncomeDao _incomeDao = IncomeDao();
-  final List<String> _incomeCategories = ['Salary', 'Freelance', 'Investments', 'Other'];
+  final IncomeCategoryDao _incomeCategoryDao = IncomeCategoryDao();
 
-  late String _selectedCategory;
+  List<IncomeCategory> _incomeCategories = [];
+  IncomeCategory? _selectedCategory;
   late TextEditingController _amountController;
   late TextEditingController _taxAmountController;
   late TextEditingController _dateController;
@@ -26,11 +30,21 @@ class _IncomeFormState extends State<IncomeForm> {
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.income?.source ?? _incomeCategories.first;
     _amountController = TextEditingController(text: widget.income?.amount.toString() ?? '');
     _taxAmountController = TextEditingController(text: widget.income?.taxAmount.toString() ?? '');
     _selectedDate = widget.income != null ? DateTime.parse(widget.income!.dateReceived) : DateTime.now();
     _dateController = TextEditingController(text: _formatDate(_selectedDate!));
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    List<IncomeCategory> categories = await _incomeCategoryDao.getAllCategories();
+    setState(() {
+      _incomeCategories = categories;
+      _selectedCategory = widget.income != null 
+          ? categories.firstWhere((category) => category.id == widget.income!.categoryId, orElse: () => categories.first)
+          : categories.first;
+    });
   }
 
   @override
@@ -65,10 +79,10 @@ class _IncomeFormState extends State<IncomeForm> {
       final income = Income(
         id: widget.income?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         userId: '1', // Replace with actual user ID
-        source: _selectedCategory,
         amount: double.tryParse(_amountController.text) ?? 0,
         dateReceived: _formatDate(_selectedDate!),
-        taxAmount: double.tryParse(_taxAmountController.text) ?? 0,
+        taxAmount: double.tryParse(_taxAmountController.text) ?? 0, 
+        categoryId: _selectedCategory?.id ?? 0,
       );
 
       if (widget.income == null) {
@@ -83,22 +97,20 @@ class _IncomeFormState extends State<IncomeForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.income == null ? 'Add Income' : 'Edit Income'),
-      ),
+    return AppScaffold(
+      title: widget.income == null ? 'Add Income' : 'Edit Income',
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<IncomeCategory>(
                 value: _selectedCategory,
-                items: _incomeCategories.map((String category) {
+                items: _incomeCategories.map((IncomeCategory category) {
                   return DropdownMenuItem(
                     value: category,
-                    child: Text(category),
+                    child: Text(category.name),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -106,7 +118,7 @@ class _IncomeFormState extends State<IncomeForm> {
                     _selectedCategory = value!;
                   });
                 },
-                decoration: InputDecoration(labelText: 'Source'),
+                decoration: InputDecoration(labelText: 'Category'),
               ),
               TextFormField(
                 controller: _amountController,
@@ -133,8 +145,8 @@ class _IncomeFormState extends State<IncomeForm> {
                     onPressed: () => _selectDate(context),
                   ),
                 ),
-                readOnly: true, // Prevents manual input
-                onTap: () => _selectDate(context), // Opens date picker on tap
+                readOnly: true,
+                onTap: () => _selectDate(context),
               ),
               SizedBox(height: 20),
               ElevatedButton(

@@ -4,12 +4,18 @@ import 'package:finance_tracker/screens/investment_form.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
+import '../databases/income_category_dao.dart';
 import '../databases/income_dao.dart';
 import '../databases/investment_dao.dart';
 import '../models/expense.dart';
 import '../models/income.dart';
 import '../models/investment.dart';
+import '../models/expense_category.dart';
+import '../models/income_category.dart';
+import '../utils/app_drawer.dart';
+import '../utils/app_scaffold.dart';
 
 class OverviewScreen extends StatefulWidget {
   final Key? key;
@@ -23,6 +29,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
   final ExpenseDao _expenseDao = ExpenseDao();
   final IncomeDao _incomeDao = IncomeDao();
   final InvestmentDao _investmentDao = InvestmentDao();
+  final ExpenseCategoryDao _expenseCategoryDao = ExpenseCategoryDao();
+  final IncomeCategoryDao _incomeCategoryDao = IncomeCategoryDao();
+
 
   double _totalIncome = 0.0;
   double _totalExpenses = 0.0;
@@ -31,6 +40,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
   bool _hasData = true;
   bool _isLoading = true;
   List<dynamic> _lastFiveTransactions = [];
+
+  Map<int, String> _expenseCategoryMap = {};
+  Map<int, String> _incomeCategoryMap = {};
 
   @override
   void didChangeDependencies() {
@@ -43,6 +55,15 @@ class _OverviewScreenState extends State<OverviewScreen> {
       _isLoading = true; // Show loading indicator during data fetch
     });
 
+    // Load categories
+    List<ExpenseCategory> expenseCategories = await _expenseCategoryDao.getAllCategories();
+    List<IncomeCategory> incomeCategories = await _incomeCategoryDao.getAllCategories();
+
+    // Map category IDs to their names
+    _expenseCategoryMap = {for (var category in expenseCategories) category.id!: category.name};
+    _incomeCategoryMap = {for (var category in incomeCategories) category.id!: category.name};
+
+    // Load transactions
     List<Income> incomes = await _incomeDao.getAllIncomes();
     List<Expense> expenses = await _expenseDao.getAllExpenses();
     List<Investment> investments = await _investmentDao.getAllInvestments();
@@ -70,11 +91,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Overview'),
-        backgroundColor: Theme.of(context).primaryColor,
-      ),
+    return AppScaffold(
+      title: 'Overview',
       body: _isLoading 
           ? Center(child: CircularProgressIndicator())
           : _hasData ? _buildDataContent() : _buildNoDataContent(),
@@ -146,7 +164,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  Widget _buildFloatingActionButton() {
+  FloatingActionButton _buildFloatingActionButton() {
     return FloatingActionButton(
       onPressed: () {
         _showAddOptions(context);
@@ -291,59 +309,58 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   Widget _buildTransactionList() {
-  return Column(
-    children: _lastFiveTransactions.map((transaction) {
-      String category = '';
-      String date = '';
-      double amount = 0.0;
-      Color amountColor = Colors.black;
-      IconData icon = Icons.monetization_on;
-      Widget? destinationScreen;
+    return Column(
+      children: _lastFiveTransactions.map((transaction) {
+        String category = '';
+        String date = '';
+        double amount = 0.0;
+        Color amountColor = Colors.black;
+        IconData icon = Icons.monetization_on;
+        Widget? destinationScreen;
 
-      if (transaction is Expense) {
-        category = transaction.category;
-        date = transaction.dateSpent;
-        amount = transaction.amount;
-        amountColor = Color(0xFF800020);
-        icon = Icons.arrow_upward;
-        destinationScreen = ExpenseForm(expense: transaction);
-      } else if (transaction is Income) {
-        category = transaction.source;
-        date = transaction.dateReceived;
-        amount = transaction.amount;
-        amountColor = Color(0xFF004B3A);
-        icon = Icons.arrow_downward;
-        destinationScreen = IncomeForm(income: transaction);
-      } else if (transaction is Investment) {
-        category = transaction.investmentType;
-        date = transaction.dateInvested;
-        amount = transaction.initialValue; // Use initial value for investments
-        amountColor = Color(0xFFB8860B);
-        icon = Icons.show_chart;
-        destinationScreen = InvestmentForm(investment: transaction);
-      }
+        if (transaction is Expense) {
+          category = _expenseCategoryMap[transaction.categoryId] ?? 'Unknown';
+          date = transaction.dateSpent;
+          amount = transaction.amount;
+          amountColor = Color(0xFF800020);
+          icon = Icons.arrow_upward;
+          destinationScreen = ExpenseForm(expense: transaction);
+        } else if (transaction is Income) {
+          category = _incomeCategoryMap[transaction.categoryId] ?? 'Unknown';
+          date = transaction.dateReceived;
+          amount = transaction.amount;
+          amountColor = Color(0xFF004B3A);
+          icon = Icons.arrow_downward;
+          destinationScreen = IncomeForm(income: transaction);
+        } else if (transaction is Investment) {
+          category = transaction.investmentType;
+          date = transaction.dateInvested;
+          amount = transaction.initialValue; // Use initial value for investments
+          amountColor = Color(0xFFB8860B);
+          icon = Icons.show_chart;
+          destinationScreen = InvestmentForm(investment: transaction);
+        }
 
-      return ListTile(
-        leading: Icon(icon, color: amountColor),
-        title: Text(category, style: TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(date),
-        trailing: Text(
-          '\$${amount.toStringAsFixed(2)}',
-          style: TextStyle(color: amountColor, fontSize: 14),
-        ),
-        onTap: destinationScreen != null
-            ? () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => destinationScreen!),
-                );
-              }
-            : null,
-      );
-    }).toList(),
-  );
-}
-
+        return ListTile(
+          leading: Icon(icon, color: amountColor),
+          title: Text(category, style: TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(date),
+          trailing: Text(
+            '\$${amount.toStringAsFixed(2)}',
+            style: TextStyle(color: amountColor, fontSize: 14),
+          ),
+          onTap: destinationScreen != null
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => destinationScreen!),
+                  );
+                }
+              : null,
+        );
+      }).toList(),
+    );
+  }
 
   void _showAddOptions(BuildContext context) {
     showModalBottomSheet(

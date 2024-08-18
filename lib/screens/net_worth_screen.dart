@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/financial_service.dart';
+import '../utils/app_scaffold.dart';
 
 class NetWorthScreen extends StatefulWidget {
   @override
@@ -26,10 +27,8 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Net Worth'),
-      ),
+    return AppScaffold(
+      title: 'Net Worth',
       body: Center(
         child: Text(
           'Your Net Worth: \$$_netWorth',

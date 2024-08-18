@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
+import '../utils/app_scaffold.dart';
 import '../utils/no_data.dart';
 import 'investment_form.dart';
 
@@ -70,10 +71,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Investments'),
-      ),
+    return AppScaffold(
+      title: 'Investments',
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _hasData ? _buildInvestmentContent() : NoDataScreen(),

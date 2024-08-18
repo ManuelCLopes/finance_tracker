@@ -1,14 +1,14 @@
 class Expense {
   final String id;
   final String userId;
-  final String category;
+  final int categoryId;
   final double amount;
   final String dateSpent;
 
   Expense({
     required this.id,
     required this.userId,
-    required this.category,
+    required this.categoryId,
     required this.amount,
     required this.dateSpent,
   });
@@ -17,7 +17,7 @@ class Expense {
     return {
       'id': id,
       'user_id': userId,
-      'category': category,
+      'category_id': categoryId,
       'amount': amount,
       'date_spent': dateSpent,
     };
@@ -27,7 +27,7 @@ class Expense {
     return Expense(
       id: map['id'],
       userId: map['user_id'],
-      category: map['category'],
+      categoryId: map['category_id'],
       amount: map['amount'],
       dateSpent: map['date_spent'],
     );

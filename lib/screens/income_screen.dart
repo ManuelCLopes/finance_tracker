@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../databases/income_category_dao.dart';
 import '../databases/income_dao.dart';
 import '../models/income.dart';
+import '../models/income_category.dart';
+import '../utils/app_scaffold.dart';
 import '../utils/no_data.dart';
 import 'income_form.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +18,10 @@ class IncomeScreen extends StatefulWidget {
 
 class _IncomeScreenState extends State<IncomeScreen> {
   final IncomeDao _incomeDao = IncomeDao();
+  final IncomeCategoryDao _incomeCategoryDao = IncomeCategoryDao();
+
   List<Income> _incomes = [];
+  Map<int, String> _categoryMap = {}; // Map to hold category IDs and names
   bool _hasData = true;
   bool _isLoading = true; // Flag to indicate loading state
   double _totalCurrentMonthIncome = 0.0;
@@ -35,7 +41,13 @@ class _IncomeScreenState extends State<IncomeScreen> {
       _isLoading = true; // Show loading indicator during data fetch
     });
 
+    // Load categories and incomes
+    List<IncomeCategory> categories = await _incomeCategoryDao.getAllCategories();
     List<Income> incomes = await _incomeDao.getAllIncomes();
+
+    // Map category IDs to their names
+    _categoryMap = {for (var category in categories) category.id!: category.name};
+
     double totalCurrentMonthIncome = 0.0;
 
     DateTime now = DateTime.now();
@@ -49,7 +61,6 @@ class _IncomeScreenState extends State<IncomeScreen> {
         totalCurrentMonthIncome += income.amount;
       }
     }
-    print("Total Income for ${DateFormat('MMMM').format(now)}: $totalCurrentMonthIncome");
 
     setState(() {
       _incomes = incomes;
@@ -76,13 +87,13 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Income'),
-      ),
+    return AppScaffold(
+      title: 'Income',
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : _hasData ? _buildIncomeContent() : NoDataScreen(),
+          : _hasData
+              ? _buildIncomeContent()
+              : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditIncome(),
         backgroundColor: Theme.of(context).dialogBackgroundColor,
@@ -164,8 +175,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
         ),
         Column(
           children: incomes.map((income) {
+            // Get category name using the category ID
+            String categoryName = _categoryMap[income.categoryId] ?? 'Unknown';
+
             return ListTile(
-              title: Text(income.source),
+              title: Text(categoryName),
               subtitle: Text(income.dateReceived),
               onTap: () => _addOrEditIncome(income: income),
               trailing: Text(
