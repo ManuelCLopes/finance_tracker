@@ -24,7 +24,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
   Map<int, String> _categoryMap = {}; // Map to hold category IDs and names
   bool _hasData = true;
   bool _isLoading = true; // Flag to indicate loading state
-  double _totalCurrentMonthIncome = 0.0;
+  double _totalMonthIncome = 0.0;
+  String _monthLabel = 'Current Month'; // Label for the card, default is 'Current Month'
+  ScrollController _scrollController = ScrollController();
+  int _currentMonth = DateTime.now().month; // Track the current displayed month
+  int _currentYear = DateTime.now().year;
 
   @override
   void didChangeDependencies() {
@@ -48,27 +52,59 @@ class _IncomeScreenState extends State<IncomeScreen> {
     // Map category IDs to their names
     _categoryMap = {for (var category in categories) category.id!: category.name};
 
-    double totalCurrentMonthIncome = 0.0;
-
-    DateTime now = DateTime.now();
-    int currentMonth = now.month;
-    int currentYear = now.year;
-
-    for (var income in incomes) {
-      DateTime incomeDate = DateTime.parse(income.dateReceived);
-
-      if (incomeDate.month == currentMonth && incomeDate.year == currentYear) {
-        totalCurrentMonthIncome += income.amount;
-      }
+    // Calculate the initial values for the card based on the first income in the list
+    if (incomes.isNotEmpty) {
+      _currentMonth = DateTime.now().month;
+      _currentYear = DateTime.now().year;
+      _updateMonthLabel(_currentMonth, _currentYear, incomes);
     }
 
     setState(() {
       _incomes = incomes;
       _hasData = incomes.isNotEmpty;
-      _totalCurrentMonthIncome = totalCurrentMonthIncome;
       _isLoading = false; // Data loading is complete
     });
   }
+
+  void _updateMonthLabel(int month, int year, List<Income> incomes) {
+    DateTime now = DateTime.now();
+
+    if (month == now.month && year == now.year) {
+      _monthLabel = 'Current Month';
+    } else {
+      String monthName = DateFormat('MMMM').format(DateTime(year, month));
+      _monthLabel = '$monthName $year';
+    }
+
+    // Calculate total income for that month
+    double totalMonthIncome = incomes.where((income) {
+      DateTime incomeDate = DateTime.parse(income.dateReceived);
+      return incomeDate.month == month && incomeDate.year == year;
+    }).fold(0.0, (sum, income) => sum + income.amount);
+
+    setState(() {
+      _totalMonthIncome = totalMonthIncome;
+    });
+  }
+
+  void _onScrollUpdate() {
+  if (_scrollController.hasClients) {
+    double itemHeight = 100.0; // Average height of each item
+    int firstVisibleIndex = (_scrollController.offset / itemHeight).floor();
+
+    if (firstVisibleIndex >= 0 && firstVisibleIndex < _incomes.length) {
+      DateTime firstVisibleDate = DateTime.parse(_incomes[firstVisibleIndex].dateReceived);
+      int visibleMonth = firstVisibleDate.month;
+      int visibleYear = firstVisibleDate.year;
+
+      if (visibleMonth != _currentMonth || visibleYear != _currentYear) {
+        _currentMonth = visibleMonth;
+        _currentYear = visibleYear;
+        _updateMonthLabel(visibleMonth, visibleYear, _incomes);
+      }
+    }
+  }
+}
 
   void _addOrEditIncome({Income? income}) async {
     await Navigator.push(
@@ -118,49 +154,58 @@ class _IncomeScreenState extends State<IncomeScreen> {
     List<String> sortedDates = groupedIncomes.keys.toList()
       ..sort((a, b) => b.compareTo(a));
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Display total income for the current month in a card
-          Card(
-            elevation: 3,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Current Month',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  Text(
-                    '\$${_totalCurrentMonthIncome.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor, // Accent color for emphasis
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (scrollInfo is ScrollUpdateNotification) {
+          _onScrollUpdate();
+        }
+        return true;
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display total income for the specific month in a card
+            Card(
+              elevation: 3,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _monthLabel, // Adjusted label based on first visible income
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                  ),
-                ],
+                    Text(
+                      '\$${_totalMonthIncome.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor, // Accent color for emphasis
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 16),
-          // Build the list of incomes grouped by date
-          Expanded(
-            child: ListView.builder(
-              itemCount: sortedDates.length,
-              itemBuilder: (context, index) {
-                String date = sortedDates[index];
-                List<Income> incomesForDate = groupedIncomes[date]!;
-                return _buildIncomeGroup(date, incomesForDate);
-              },
+            SizedBox(height: 16),
+            // Build the list of incomes grouped by date
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: sortedDates.length,
+                itemBuilder: (context, index) {
+                  String date = sortedDates[index];
+                  List<Income> incomesForDate = groupedIncomes[date]!;
+                  return _buildIncomeGroup(date, incomesForDate);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

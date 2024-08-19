@@ -1,5 +1,5 @@
-import 'package:finance_tracker/databases/expense_category_dao.dart';
 import 'package:flutter/material.dart';
+import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../models/expense.dart';
 import '../models/expense_category.dart';
@@ -25,12 +25,25 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   List<Expense> _expenses = [];
   bool _hasData = true;
   double _totalCurrentMonthExpenses = 0.0;
+  String _monthLabel = 'Current Month'; // Label for the card, default is 'Current Month'
+  double _visibleMonthTotal = 0.0;
+  int _currentMonth = DateTime.now().month;
+  int _currentYear = DateTime.now().year;
   Map<int, String> _categoryMap = {};  // Map with int keys and String values
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _scrollController.addListener(_onScrollUpdate);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -38,6 +51,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     List<ExpenseCategory> categories = await _expenseCategoryDao.getAllCategories();
 
     double totalCurrentMonthExpenses = 0.0;
+    Map<String, double> monthlyTotals = {};
 
     DateTime now = DateTime.now();
     int currentMonth = now.month;
@@ -45,20 +59,67 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
     for (var expense in expenses) {
       DateTime expenseDate = DateTime.parse(expense.dateSpent);
+      String monthKey = '${expenseDate.year}-${expenseDate.month}';
 
       if (expenseDate.month == currentMonth && expenseDate.year == currentYear) {
         totalCurrentMonthExpenses += expense.amount;
       }
+
+      if (monthlyTotals.containsKey(monthKey)) {
+        monthlyTotals[monthKey] = monthlyTotals[monthKey]! + expense.amount;
+      } else {
+        monthlyTotals[monthKey] = expense.amount;
+      }
     }
 
-    // Map category ID to name
     setState(() {
       _expenses = expenses;
       _hasData = expenses.isNotEmpty;
       _totalCurrentMonthExpenses = totalCurrentMonthExpenses;
+      _visibleMonthTotal = totalCurrentMonthExpenses;
       _categoryMap = {for (var category in categories) category.id!: category.name};
     });
   }
+
+  void _updateMonthLabel(int month, int year, List<Expense> expenses) {
+    DateTime now = DateTime.now();
+
+    if (month == now.month && year == now.year) {
+      _monthLabel = 'Current Month';
+    } else {
+      String monthName = DateFormat('MMMM').format(DateTime(year, month));
+      _monthLabel = '$monthName $year';
+    }
+
+    // Calculate total income for that month
+    double totalMonthExpenses = expenses.where((expense) {
+      DateTime expenseDate = DateTime.parse(expense.dateSpent);
+      return expenseDate.month == month && expenseDate.year == year;
+    }).fold(0.0, (sum, income) => sum + income.amount);
+
+    setState(() {
+      _totalCurrentMonthExpenses = totalMonthExpenses;
+    });
+  }
+
+  void _onScrollUpdate() {
+  if (_scrollController.hasClients) {
+    double itemHeight = 90.0; // Average height of each item
+    int firstVisibleIndex = (_scrollController.offset / itemHeight).floor();
+
+    if (firstVisibleIndex >= 0 && firstVisibleIndex < _expenses.length) {
+      DateTime firstVisibleDate = DateTime.parse(_expenses[firstVisibleIndex].dateSpent);
+      int visibleMonth = firstVisibleDate.month;
+      int visibleYear = firstVisibleDate.year;
+
+      if (visibleMonth != _currentMonth || visibleYear != _currentYear) {
+        _currentMonth = visibleMonth;
+        _currentYear = visibleYear;
+        _updateMonthLabel(visibleMonth, visibleYear, _expenses);
+      }
+    }
+  }
+}
 
   void _addOrEditExpense({Expense? expense}) async {
     await Navigator.push(
@@ -89,7 +150,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   }
 
   Widget _buildExpenseContent() {
-    // Group expenses by date in descending order
     Map<String, List<Expense>> groupedExpenses = {};
     for (var expense in _expenses) {
       String formattedDate = DateFormat('yyyy-MM-dd').format(DateTime.parse(expense.dateSpent));
@@ -100,7 +160,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       }
     }
 
-    // Sort the dates in descending order
     List<String> sortedDates = groupedExpenses.keys.toList()
       ..sort((a, b) => b.compareTo(a));
 
@@ -109,7 +168,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Display total expenses for the current month in a card
           Card(
             elevation: 3,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -119,11 +177,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Current Month',
+                    _currentMonth == DateTime.now().month && _currentYear == DateTime.now().year
+                        ? 'Current Month'
+                        : DateFormat('MMMM yyyy').format(DateTime(_currentYear, _currentMonth)),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   Text(
-                    '\$${_totalCurrentMonthExpenses.toStringAsFixed(2)}',
+                    '\$${_visibleMonthTotal.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -135,9 +195,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             ),
           ),
           SizedBox(height: 16),
-          // Build the list of expenses grouped by date
           Expanded(
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: sortedDates.length,
               itemBuilder: (context, index) {
                 String date = sortedDates[index];
