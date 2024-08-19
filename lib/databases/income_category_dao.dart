@@ -38,4 +38,10 @@ class IncomeCategoryDao {
     );
   }
 
+  Future<void> bulkInsertCategories(List<Map<String, dynamic>> categories, Transaction txn) async {
+    for (var category in categories) {
+      await txn.insert('income_categories', category);
+    }
+  }
+
 }

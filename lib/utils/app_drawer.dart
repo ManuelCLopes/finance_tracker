@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/backup_screen.dart';
 import '../screens/category_management_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -28,6 +29,17 @@ class AppDrawer extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => CategoryManagementScreen()),
+              );
+            },
+          ),
+           ListTile(
+            leading: Icon(Icons.backup),
+            title: Text('Backup & Restore'),
+            onTap: () {
+              Navigator.pop(context); // Fechar o drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BackupScreen()),
               );
             },
           ),

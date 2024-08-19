@@ -49,4 +49,10 @@ class ExpenseCategoryDao {
       );
     });
   }
+
+  Future<void> bulkInsertCategories(List<Map<String, dynamic>> categories, Transaction txn) async {
+    for (var category in categories) {
+      await txn.insert('expense_categories', category);
+    }
+  }
 }

@@ -67,12 +67,18 @@ class IncomeDao {
   }
 
   Future<List<Income>> getAllIncomes() async {
-  final db = await _dbHelper.database;
-  final List<Map<String, dynamic>> maps = await db.query('incomes');
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query('incomes');
 
-  return List.generate(maps.length, (i) {
-    return Income.fromMap(maps[i]);
-  });
-}
+    return List.generate(maps.length, (i) {
+      return Income.fromMap(maps[i]);
+    });
+  }
+
+  Future<void> bulkInsertIncomes(List<Map<String, dynamic>> incomes, Transaction txn) async {
+    for (var income in incomes) {
+      await txn.insert('incomes', income);
+    }
+  }
 
 }

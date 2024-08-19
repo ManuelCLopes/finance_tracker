@@ -50,4 +50,10 @@ class InvestmentDao {
       return Investment.fromMap(maps[i]);
     });
   }
+
+  Future<void> bulkInsertInvestments(List<Map<String, dynamic>> investments, Transaction txn) async {
+    for (var investment in investments) {
+      await txn.insert('investments', investment);
+    }
+  }
 }
