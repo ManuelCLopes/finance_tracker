@@ -50,6 +50,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
     _loadData(); // Refresh data whenever dependencies change
   }
 
+  void loadData() => _OverviewScreenState()._loadData();
+
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true; // Show loading indicator during data fetch
