@@ -52,7 +52,15 @@ class ExpenseCategoryDao {
 
   Future<void> bulkInsertCategories(List<Map<String, dynamic>> categories, Transaction txn) async {
     for (var category in categories) {
-      await txn.insert('expense_categories', category);
+      try {
+        await txn.insert(
+          'expense_categories',
+          category,
+          conflictAlgorithm: ConflictAlgorithm.ignore
+        );
+      } catch (e) {
+        print('Error inserting category: $category. Error: $e');
+      }
     }
   }
 }

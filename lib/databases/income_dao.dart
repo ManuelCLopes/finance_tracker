@@ -77,7 +77,15 @@ class IncomeDao {
 
   Future<void> bulkInsertIncomes(List<Map<String, dynamic>> incomes, Transaction txn) async {
     for (var income in incomes) {
-      await txn.insert('incomes', income);
+      try {
+        await txn.insert(
+          'incomes',
+          income,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      } catch (e) {
+        print('Error inserting income: $income. Error: $e');
+      }
     }
   }
 
