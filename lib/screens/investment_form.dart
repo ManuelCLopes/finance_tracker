@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
 import 'package:intl/intl.dart';
-
 import '../utils/app_scaffold.dart';
 
 class InvestmentForm extends StatefulWidget {
@@ -62,6 +61,40 @@ class _InvestmentFormState extends State<InvestmentForm> {
     }
   }
 
+  Future<void> _deleteInvestment() async {
+    if (widget.investment != null) {
+      await _investmentDao.deleteInvestment(widget.investment!.id);
+      Navigator.pop(context); // Close the form after deletion
+    }
+  }
+
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Investment'),
+          content: Text('Are you sure you want to delete this investment?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _deleteInvestment(); // Delete the investment
+              },
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _saveInvestment() async {
     if (_formKey.currentState!.validate()) {
       final investment = Investment(
@@ -85,8 +118,17 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScaffold(
-      title: widget.investment == null ? 'Add Investment' : 'Edit Investment',
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.investment == null ? 'Add Investment' : 'Edit Investment'),
+        actions: [
+          if (widget.investment != null)
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: _confirmDelete,
+            ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

@@ -5,11 +5,13 @@ class AppScaffold extends StatelessWidget {
   final Widget body;
   final String title;
   final FloatingActionButton? floatingActionButton; // Optional FAB
+  final List<IconButton>? actions; // Optional Actions list
 
   AppScaffold({
     required this.body,
     required this.title,
-    this.floatingActionButton,
+    this.floatingActionButton, 
+    this.actions,
   });
 
   @override
@@ -17,6 +19,7 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        actions: actions,
         backgroundColor: Theme.of(context).primaryColor,
       ),
       drawer: AppDrawer(), // Use the reusable drawer

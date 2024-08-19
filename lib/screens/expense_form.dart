@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../models/expense.dart';
-import '../models/expense_category.dart';
 import 'package:intl/intl.dart';
 
 class ExpenseForm extends StatefulWidget {
@@ -17,10 +15,8 @@ class ExpenseForm extends StatefulWidget {
 class _ExpenseFormState extends State<ExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   final ExpenseDao _expenseDao = ExpenseDao();
-  final ExpenseCategoryDao _expenseCategoryDao = ExpenseCategoryDao();
 
-  List<ExpenseCategory> _categories = [];
-  ExpenseCategory? _selectedCategory;
+  late String _selectedCategory;
   late TextEditingController _amountController;
   late TextEditingController _dateController;
   DateTime? _selectedDate;
@@ -28,7 +24,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
   @override
   void initState() {
     super.initState();
-    _loadCategories(); // Load categories when the form is initialized
+    _selectedCategory = widget.expense?.categoryId?.toString() ?? ''; // Adjust based on your category handling
     _amountController = TextEditingController(text: widget.expense?.amount.toString() ?? '');
     _selectedDate = widget.expense != null ? DateTime.parse(widget.expense!.dateSpent) : DateTime.now();
     _dateController = TextEditingController(text: _formatDate(_selectedDate!));
@@ -39,16 +35,6 @@ class _ExpenseFormState extends State<ExpenseForm> {
     _amountController.dispose();
     _dateController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadCategories() async {
-    List<ExpenseCategory> categories = await _expenseCategoryDao.getAllCategories();
-    setState(() {
-      _categories = categories;
-      _selectedCategory = widget.expense != null
-          ? _categories.firstWhere((category) => category.id == widget.expense!.categoryId)
-          : _categories.isNotEmpty ? _categories.first : null;
-    });
   }
 
   String _formatDate(DateTime date) {
@@ -70,14 +56,48 @@ class _ExpenseFormState extends State<ExpenseForm> {
     }
   }
 
+  Future<void> _deleteExpense() async {
+    if (widget.expense != null) {
+      await _expenseDao.deleteExpense(widget.expense!.id);
+      Navigator.pop(context); // Close the form after deletion
+    }
+  }
+
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Expense'),
+          content: Text('Are you sure you want to delete this expense?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _deleteExpense(); // Delete the expense
+              },
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _saveExpense() async {
     if (_formKey.currentState!.validate()) {
       final expense = Expense(
         id: widget.expense?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         userId: '1', // Replace with actual user ID
-        categoryId: _selectedCategory!.id!, // Use the selected category's ID
         amount: double.tryParse(_amountController.text) ?? 0,
         dateSpent: _formatDate(_selectedDate!),
+        categoryId: int.parse(_selectedCategory), // Adjust based on your category handling
       );
 
       if (widget.expense == null) {
@@ -95,6 +115,13 @@ class _ExpenseFormState extends State<ExpenseForm> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.expense == null ? 'Add Expense' : 'Edit Expense'),
+        actions: [
+          if (widget.expense != null)
+            IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: _confirmDelete,
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -102,22 +129,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
           key: _formKey,
           child: Column(
             children: [
-              DropdownButtonFormField<ExpenseCategory>(
-                value: _selectedCategory,
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category.name),
-                  );
-                }).toList(),
-                onChanged: (ExpenseCategory? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue;
-                  });
-                },
-                decoration: InputDecoration(labelText: 'Category'),
-                validator: (value) => value == null ? 'Please select a category' : null,
-              ),
+              // Add your category dropdown here
               TextFormField(
                 controller: _amountController,
                 decoration: InputDecoration(labelText: 'Amount'),
@@ -138,8 +150,8 @@ class _ExpenseFormState extends State<ExpenseForm> {
                     onPressed: () => _selectDate(context),
                   ),
                 ),
-                readOnly: true,
-                onTap: () => _selectDate(context),
+                readOnly: true, // Prevents manual input
+                onTap: () => _selectDate(context), // Opens date picker on tap
               ),
               SizedBox(height: 20),
               ElevatedButton(
