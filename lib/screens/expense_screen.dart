@@ -5,8 +5,9 @@ import '../models/expense.dart';
 import '../models/expense_category.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/no_data.dart';
-import 'expense_form.dart';
 import 'package:intl/intl.dart';
+
+import 'expense_form.dart';
 
 class ExpenseScreen extends StatefulWidget {
   ExpenseScreen({Key? key}) : super(key: key);
@@ -14,7 +15,6 @@ class ExpenseScreen extends StatefulWidget {
   @override
   _ExpenseScreenState createState() => _ExpenseScreenState();
 
-  @override
   void refreshData() => _ExpenseScreenState()._loadData();
 }
 
@@ -24,8 +24,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   List<Expense> _expenses = [];
   bool _hasData = true;
-  double _totalCurrentMonthExpenses = 0.0;
-  String _monthLabel = 'Current Month'; // Label for the card, default is 'Current Month'
   double _visibleMonthTotal = 0.0;
   int _currentMonth = DateTime.now().month;
   int _currentYear = DateTime.now().year;
@@ -75,7 +73,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     setState(() {
       _expenses = expenses;
       _hasData = expenses.isNotEmpty;
-      _totalCurrentMonthExpenses = totalCurrentMonthExpenses;
       _visibleMonthTotal = totalCurrentMonthExpenses;
       _categoryMap = {for (var category in categories) category.id!: category.name};
     });
@@ -85,20 +82,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     DateTime now = DateTime.now();
 
     if (month == now.month && year == now.year) {
-      _monthLabel = 'Current Month';
     } else {
-      String monthName = DateFormat('MMMM').format(DateTime(year, month));
-      _monthLabel = '$monthName $year';
+      DateFormat('MMMM').format(DateTime(year, month));
     }
 
     // Calculate total income for that month
-    double totalMonthExpenses = expenses.where((expense) {
+    expenses.where((expense) {
       DateTime expenseDate = DateTime.parse(expense.dateSpent);
       return expenseDate.month == month && expenseDate.year == year;
     }).fold(0.0, (sum, income) => sum + income.amount);
 
     setState(() {
-      _totalCurrentMonthExpenses = totalMonthExpenses;
     });
   }
 
@@ -143,7 +137,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       body: _hasData ? _buildExpenseContent() : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditExpense(),
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
         child: Icon(Icons.add),
       ),
     );

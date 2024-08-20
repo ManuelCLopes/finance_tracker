@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
 import 'package:intl/intl.dart';
-import '../utils/app_scaffold.dart';
 
 class InvestmentForm extends StatefulWidget {
   final Investment? investment;
 
-  InvestmentForm({this.investment});
+  InvestmentForm({super.key, this.investment});
 
   @override
   _InvestmentFormState createState() => _InvestmentFormState();
@@ -64,7 +63,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
   Future<void> _deleteInvestment() async {
     if (widget.investment != null) {
       await _investmentDao.deleteInvestment(widget.investment!.id);
-      Navigator.pop(context); // Close the form after deletion
+      Navigator.pop(context);
     }
   }
 
@@ -73,21 +72,21 @@ class _InvestmentFormState extends State<InvestmentForm> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete Investment'),
-          content: Text('Are you sure you want to delete this investment?'),
+          title: const Text('Delete Investment'),
+          content: const Text('Are you sure you want to delete this investment?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _deleteInvestment(); // Delete the investment
+                Navigator.of(context).pop();
+                _deleteInvestment();
               },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -124,7 +123,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
         actions: [
           if (widget.investment != null)
             IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: _confirmDelete,
             ),
         ],
@@ -148,11 +147,11 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     _selectedType = value!;
                   });
                 },
-                decoration: InputDecoration(labelText: 'Investment Type'),
+                decoration: const InputDecoration(labelText: 'Investment Type'),
               ),
               TextFormField(
                 controller: _initialValueController,
-                decoration: InputDecoration(labelText: 'Initial Value'),
+                decoration: const InputDecoration(labelText: 'Initial Value'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -163,7 +162,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
               ),
               TextFormField(
                 controller: _currentValueController,
-                decoration: InputDecoration(labelText: 'Current Value'),
+                decoration: const InputDecoration(labelText: 'Current Value'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -177,17 +176,17 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 decoration: InputDecoration(
                   labelText: 'Date Invested',
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.calendar_today),
+                    icon: const Icon(Icons.calendar_today),
                     onPressed: () => _selectDate(context),
                   ),
                 ),
                 readOnly: true,
                 onTap: () => _selectDate(context),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveInvestment,
-                child: Text('Save Investment'),
+                child: const Text('Save Investment'),
               ),
             ],
           ),

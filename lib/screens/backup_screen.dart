@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:open_file/open_file.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/backup_frequency_dialog.dart';
 import '../utils/backup_helper.dart';
 
 class BackupScreen extends StatefulWidget {
@@ -9,79 +9,106 @@ class BackupScreen extends StatefulWidget {
 }
 
 class _BackupScreenState extends State<BackupScreen> {
+  String? _selectedFrequency;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedFrequency();
+  }
+
+  Future<void> _loadSavedFrequency() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedFrequency = prefs.getString('backup_frequency');
+    });
+  }
+
+  void _openFrequencySelector() {
+    showDialog(
+      context: context,
+      builder: (context) => BackupFrequencyDialog(
+        selectedFrequency: _selectedFrequency,
+        onFrequencySelected: (frequency) async {
+          setState(() {
+            _selectedFrequency = frequency;
+          });
+          if (frequency != null) {
+            await BackupHelper.scheduleBackup(frequency: frequency);
+          }
+        },
+        onUnschedule: () async {
+          setState(() {
+            _selectedFrequency = null;
+          });
+          await BackupHelper.unscheduleBackup();
+        },
+      ),
+    );
+  }
+
+  Future<void> _exportToJson() async {
+    final filePath = await BackupHelper.exportToJson();
+    if (filePath != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Backup saved as JSON in $filePath')),
+      );
+    }
+  }
+
+  Future<void> _exportToCsv() async {
+    final filePath = await BackupHelper.exportToCsv();
+    if (filePath != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Backup saved as CSV in $filePath')),
+      );
+    }
+  }
+
+  Future<void> _importFromJson() async {
+    await BackupHelper.importFromJson();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data restored from JSON')),
+    );
+  }
+
+  Future<void> _importFromCsv() async {
+    await BackupHelper.importFromCsv();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data restored from CSV')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Backup & Restore'),
+        title: const Text('Backup & Restore'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Export Data',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                final filePath = await BackupHelper.exportToJson();
-                if (filePath != null) {
-                  _showSnackBarWithOpenOption(filePath, 'Exported to JSON');
-                }
-              },
-              child: Text('Export to JSON'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final filePath = await BackupHelper.exportToCsv();
-                if (filePath != null) {
-                  _showSnackBarWithOpenOption(filePath, 'Exported to CSV');
-                }
-              },
-              child: Text('Export to CSV'),
-            ),
-            SizedBox(height: 30),
-            Text(
-              'Import Data',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                await BackupHelper.importFromJson();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported from JSON')));
-              },
-              child: Text('Import from JSON'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await BackupHelper.importFromCsv();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported from CSV')));
-              },
-              child: Text('Import from CSV'),
-            ),
-            SizedBox(height: 30),
-            Text(
-              'Backup Scheduling',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                BackupHelper.scheduleBackup('weekly');
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup scheduled')));
-              },
-              child: Text('Schedule Weekly Backup'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                BackupHelper.unscheduleBackup();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup unscheduled')));
-              },
-              child: Text('Unschedule Backup'),
+            if (_selectedFrequency != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  'Scheduled Backup: $_selectedFrequency',
+                ),
+              ),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                children: [
+                  _buildSquareButton('Export to JSON', Icons.file_copy, _exportToJson),
+                  _buildSquareButton('Export to CSV', Icons.table_chart, _exportToCsv),
+                  _buildSquareButton('Import JSON', Icons.file_download, _importFromJson),
+                  _buildSquareButton('Import CSV', Icons.file_upload, _importFromCsv),
+                  _buildSquareButton('Backup \nScheduling', Icons.schedule, _openFrequencySelector),
+                ],
+              ),
             ),
           ],
         ),
@@ -89,15 +116,29 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
-  void _showSnackBarWithOpenOption(String filePath, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        action: SnackBarAction(
-          label: 'Open',
-          onPressed: () {
-            OpenFile.open(filePath);
-          },
+  Widget _buildSquareButton(String title, IconData icon, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Card(
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center, 
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(icon, size: 40.0),
+              const SizedBox(height: 8.0),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -20,7 +20,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   bool _hasData = true;
   bool _isLoading = true;
   double _totalInvested = 0.0;
-  double _totalInitial = 0.0;
   double _percentageReturn = 0.0;
 
   @override
@@ -47,7 +46,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     setState(() {
       _investments = investments;
       _totalInvested = totalInvested;
-      _totalInitial = totalInitial;
       _percentageReturn = percentageReturn;
       _hasData = investments.isNotEmpty;
       _isLoading = false;
@@ -74,12 +72,11 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     return AppScaffold(
       title: 'Investments',
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _hasData ? _buildInvestmentContent() : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditInvestment(),
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -124,7 +121,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                           color: Theme.of(context).primaryColor,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         '${_percentageReturn.toStringAsFixed(2)}%',
                         style: TextStyle(
@@ -139,7 +136,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
               ),
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           // Build the list of investments grouped by type
           Expanded(
             child: ListView.builder(
@@ -173,17 +170,17 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
               category,
               style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
             ),
-            SizedBox(width: 8), // Space between category and value
+            const SizedBox(width: 8),
             Text(
               '\$${totalCurrent.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.titleMedium, // Regular font for value
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-            SizedBox(width: 8), // Space between value and percentage
+            const SizedBox(width: 8),
             Text(
               '${percentageReturn.toStringAsFixed(2)}%',
               style: TextStyle(
-                fontSize: 16, // Regular font size
-                color: percentageReturn >= 0 ? Colors.green : Colors.red, // Green for gain, red for loss
+                fontSize: 16, 
+                color: percentageReturn >= 0 ? Colors.green : Colors.red,
               ),
             ),
           ],
@@ -195,7 +192,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
               subtitle: Text('Current: \$${investment.currentValue.toStringAsFixed(2)}'),
               trailing: Text(
                 investment.dateInvested,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
                 ),
@@ -205,7 +202,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           }
         ).toList(),
       ),
-      Divider(),
+      const Divider(),
     ],
   );
 }

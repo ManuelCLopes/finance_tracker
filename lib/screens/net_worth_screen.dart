@@ -3,6 +3,8 @@ import '../services/financial_service.dart';
 import '../utils/app_scaffold.dart';
 
 class NetWorthScreen extends StatefulWidget {
+  const NetWorthScreen({super.key});
+
   @override
   _NetWorthScreenState createState() => _NetWorthScreenState();
 }
@@ -32,7 +34,7 @@ class _NetWorthScreenState extends State<NetWorthScreen> {
       body: Center(
         child: Text(
           'Your Net Worth: \$$_netWorth',
-          style: TextStyle(fontSize: 24),
+          style: const TextStyle(fontSize: 24),
         ),
       ),
     );

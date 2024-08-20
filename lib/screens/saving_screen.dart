@@ -4,6 +4,8 @@ import '../models/savings.dart';
 import '../utils/app_scaffold.dart';
 
 class SavingsScreen extends StatefulWidget {
+  const SavingsScreen({super.key});
+
   @override
   _SavingsScreenState createState() => _SavingsScreenState();
 }
@@ -51,7 +53,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
             title: Text(_savings[index].goalName),
             subtitle: Text('Target: \$${_savings[index].targetAmount}, Current: \$${_savings[index].currentAmount}'),
             trailing: IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: () => _deleteSavings(_savings[index].id),
             ),
           );
@@ -59,7 +61,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addSavings,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

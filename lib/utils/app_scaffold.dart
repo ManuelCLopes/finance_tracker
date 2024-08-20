@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'app_drawer.dart'; // Import the reusable AppDrawer
+import 'app_drawer.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget body;
@@ -7,7 +7,7 @@ class AppScaffold extends StatelessWidget {
   final FloatingActionButton? floatingActionButton; // Optional FAB
   final List<IconButton>? actions; // Optional Actions list
 
-  AppScaffold({
+  const AppScaffold({super.key, 
     required this.body,
     required this.title,
     this.floatingActionButton, 
@@ -20,11 +20,10 @@ class AppScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         actions: actions,
-        backgroundColor: Theme.of(context).primaryColor,
       ),
-      drawer: AppDrawer(), // Use the reusable drawer
-      body: body, // Display the screen's content
-      floatingActionButton: floatingActionButton, // Include the FAB if provided
+      drawer: AppDrawer(),
+      body: body, 
+      floatingActionButton: floatingActionButton,
     );
   }
 }

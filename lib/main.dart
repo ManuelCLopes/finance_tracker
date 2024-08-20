@@ -1,67 +1,48 @@
+// main.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
+import 'utils/backup_helper.dart';
+import 'utils/theme.dart'; // Import the theme file
 import 'screens/home_screen.dart';
+import 'utils/theme_provider.dart';
 
-void main() {
-  runApp(FinanceTrackerApp());
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    switch (task) {
+      case 'backupTask':
+        await BackupHelper.scheduledBackup();
+        break;
+    }
+    return Future.value(true);
+  });
 }
 
-class FinanceTrackerApp extends StatelessWidget {
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
-      title: 'Finance Tracker',
-      theme: ThemeData(
-        // Define the default brightness and colors
-        brightness: Brightness.light,
-        primaryColor: Color(0xFF004B3A), // Deep Green
-        hintColor: Color(0xFFB8860B),  // Gold Accents
-
-        // Define the default font family
-        fontFamily: 'Georgia',
-
-        // Define the default TextTheme
-        textTheme: TextTheme(
-          displayLarge: TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold, color: Color(0xFF004B3A)), // Deep Green
-          titleLarge: TextStyle(fontSize: 18.0, fontStyle: FontStyle.normal, color: Color(0xFF2C3E50)), // Dark Blue
-          bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind', color: Color(0xFF2C3E50)), // Dark Blue
-        ),
-
-        // Customize the app bar
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFF004B3A), // Deep Green
-          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-          iconTheme: IconThemeData(color: Colors.white),
-        ),
-
-        // Customize the bottom navigation bar
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFF2C3E50), // Dark Blue
-          selectedItemColor: Color(0xFFB8860B), // Gold Accents
-          unselectedItemColor: Color(0xFFF5F5DC), // Beige
-        ),
-
-        // Define the default card color and shape
-        cardColor: Color(0xFFF5F5DC), // Beige
-        cardTheme: CardTheme(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-
-        // Customize buttons
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white, backgroundColor: Color(0xFF800020),
-            textStyle: TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-
-        // Customize the icon themes
-        iconTheme: IconThemeData(
-          color: Color(0xFF8B4513), // Brown
-        ),
-      ),
-      home: HomeScreen(), // Your HomeScreen or OverviewScreen
+      title: 'Flutter Demo',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.themeMode,
+      home: HomeScreen(),
     );
   }
 }

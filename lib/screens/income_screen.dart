@@ -126,14 +126,13 @@ class _IncomeScreenState extends State<IncomeScreen> {
     return AppScaffold(
       title: 'Income',
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _hasData
               ? _buildIncomeContent()
               : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditIncome(),
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -184,14 +183,14 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor, // Accent color for emphasis
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             // Build the list of incomes grouped by date
             Expanded(
               child: ListView.builder(
@@ -237,7 +236,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
             );
           }).toList(),
         ),
-        Divider(),
+        const Divider(),
       ],
     );
   }

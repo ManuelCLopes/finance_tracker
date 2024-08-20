@@ -38,7 +38,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
         bool isExpense = true;
 
         return AlertDialog(
-          title: Text('Add Category'),
+          title: const Text('Add Category'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -46,18 +46,18 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 onChanged: (value) {
                   name = value;
                 },
-                decoration: InputDecoration(labelText: 'Category Name'),
+                decoration: const InputDecoration(labelText: 'Category Name'),
               ),
               DropdownButtonFormField<bool>(
                 value: isExpense,
                 items: [
-                  DropdownMenuItem(value: true, child: Text('Expense')),
-                  DropdownMenuItem(value: false, child: Text('Income')),
+                  const DropdownMenuItem(value: true, child: Text('Expense')),
+                  const DropdownMenuItem(value: false, child: Text('Income')),
                 ],
                 onChanged: (value) {
                   isExpense = value!;
                 },
-                decoration: InputDecoration(labelText: 'Category Type'),
+                decoration: const InputDecoration(labelText: 'Category Type'),
               ),
             ],
           ),
@@ -66,7 +66,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -80,7 +80,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );
@@ -92,15 +92,15 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        String name = category.name; // Explicitly specify the type here
+        String name = category.name;
 
         return AlertDialog(
-          title: Text('Edit Category'),
+          title: const Text('Edit Category'),
           content: TextField(
             onChanged: (value) {
               name = value;
             },
-            decoration: InputDecoration(labelText: 'Category Name'),
+            decoration: const InputDecoration(labelText: 'Category Name'),
             controller: TextEditingController(text: category.name),
           ),
           actions: [
@@ -108,7 +108,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -122,7 +122,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         );
@@ -143,11 +143,11 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Manage Categories'),
+        title: const Text('Manage Categories'),
       ),
       body: ListView(
         children: [
-          ListTile(
+          const ListTile(
             title: Text('Expense Categories'),
           ),
           ..._expenseCategories.map((category) {
@@ -157,19 +157,19 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     onPressed: () => _editCategory(category, true),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => _deleteCategory(category.id!, true),
                   ),
                 ],
               ),
             );
           }).toList(),
-          Divider(),
-          ListTile(
+          const Divider(),
+          const ListTile(
             title: Text('Income Categories'),
           ),
           ..._incomeCategories.map((category) {
@@ -179,11 +179,11 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: Icon(Icons.edit),
+                    icon: const Icon(Icons.edit),
                     onPressed: () => _editCategory(category, false),
                   ),
                   IconButton(
-                    icon: Icon(Icons.delete),
+                    icon: const Icon(Icons.delete),
                     onPressed: () => _deleteCategory(category.id!, false),
                   ),
                 ],
@@ -194,7 +194,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addCategory,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }

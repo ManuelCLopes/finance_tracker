@@ -2,7 +2,6 @@ import 'package:finance_tracker/screens/expense_form.dart';
 import 'package:finance_tracker/screens/income_form.dart';
 import 'package:finance_tracker/screens/investment_form.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
@@ -14,12 +13,12 @@ import '../models/income.dart';
 import '../models/investment.dart';
 import '../models/expense_category.dart';
 import '../models/income_category.dart';
-import '../utils/app_drawer.dart';
 import '../utils/app_scaffold.dart';
+import '../utils/theme_pie_chart.dart';
 
 class OverviewScreen extends StatefulWidget {
   final Key? key;
-  OverviewScreen({this.key}) : super(key: key);
+  const OverviewScreen({this.key}) : super(key: key);
 
   @override
   _OverviewScreenState createState() => _OverviewScreenState();
@@ -31,7 +30,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
   final InvestmentDao _investmentDao = InvestmentDao();
   final ExpenseCategoryDao _expenseCategoryDao = ExpenseCategoryDao();
   final IncomeCategoryDao _incomeCategoryDao = IncomeCategoryDao();
-
 
   double _totalIncome = 0.0;
   double _totalExpenses = 0.0;
@@ -47,14 +45,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadData(); // Refresh data whenever dependencies change
+    _loadData(); 
   }
 
   void loadData() => _OverviewScreenState()._loadData();
 
   Future<void> _loadData() async {
     setState(() {
-      _isLoading = true; // Show loading indicator during data fetch
+      _isLoading = true;
     });
 
     // Load categories
@@ -76,17 +74,37 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
     double netWorth = totalIncome - totalExpenses + totalInvestments;
 
+    // Sort and combine the transactions to get the last five
+    _lastFiveTransactions = [
+      ...expenses,
+      ...incomes,
+      ...investments,
+    ]..sort((a, b) {
+        DateTime dateA, dateB;
+        if (a is Expense) {
+          dateA = DateTime.parse(a.dateSpent);
+        } else if (a is Income) {
+          dateA = DateTime.parse(a.dateReceived);
+        } else {
+          dateA = DateTime.parse((a as Investment).dateInvested);
+        }
+
+        if (b is Expense) {
+          dateB = DateTime.parse(b.dateSpent);
+        } else if (b is Income) {
+          dateB = DateTime.parse(b.dateReceived);
+        } else {
+          dateB = DateTime.parse((b as Investment).dateInvested);
+        }
+        return dateB.compareTo(dateA); // Sort by most recent first
+      });
+
     setState(() {
       _totalIncome = totalIncome;
       _totalExpenses = totalExpenses;
       _totalInvestments = totalInvestments;
       _netWorth = netWorth;
       _hasData = incomes.isNotEmpty || expenses.isNotEmpty || investments.isNotEmpty;
-      _lastFiveTransactions = [
-        ...expenses.take(5),
-        ...incomes.take(5),
-        ...investments.take(5)
-      ];
       _isLoading = false;
     });
   }
@@ -96,7 +114,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     return AppScaffold(
       title: 'Overview',
       body: _isLoading 
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _hasData ? _buildDataContent() : _buildNoDataContent(),
       floatingActionButton: _hasData ? _buildFloatingActionButton() : null,
     );
@@ -109,11 +127,11 @@ class _OverviewScreenState extends State<OverviewScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (_totalIncome > 0 || _totalExpenses > 0) _buildIncomeVsExpensesSummary(),
-          if (_totalIncome > 0 || _totalExpenses > 0) SizedBox(height: 16),
+          if (_totalIncome > 0 || _totalExpenses > 0) const SizedBox(height: 16),
           _buildNetWorthSummary(),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           _buildInvestmentSummary(),
-          SizedBox(height: 32),
+          const SizedBox(height: 32),
           _buildRecentTransactions(),
         ],
       ),
@@ -133,17 +151,17 @@ class _OverviewScreenState extends State<OverviewScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          SizedBox(height: 48),
+          const SizedBox(height: 48),
           SvgPicture.asset(
             'assets/images/savings.svg',
             width: 150,
             height: 150,
           ),
-          SizedBox(height: 60),
+          const SizedBox(height: 60),
           _buildNoDataButton('Add First Income', IncomeForm()),
-          SizedBox(height: 16),
-          _buildNoDataButton('Add First Expense', ExpenseForm()),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
+          _buildNoDataButton('Add First Expense', const ExpenseForm()),
+          const SizedBox(height: 16),
           _buildNoDataButton('Add First Investment', InvestmentForm()),
         ],
       ),
@@ -158,10 +176,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
           MaterialPageRoute(builder: (context) => form),
         );
       },
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.black,
-        backgroundColor: Theme.of(context).dialogBackgroundColor,
-      ),
       child: Text(text),
     );
   }
@@ -171,74 +185,15 @@ class _OverviewScreenState extends State<OverviewScreen> {
       onPressed: () {
         _showAddOptions(context);
       },
-      backgroundColor: Theme.of(context).dialogBackgroundColor,
-      child: Icon(Icons.add),
+      child: const Icon(Icons.add),
     );
   }
 
   Widget _buildIncomeVsExpensesSummary() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Estimated Net Worth',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        SizedBox(height: 16),
-        _buildPieChart(),
-        SizedBox(height: 16),
-        _buildPieChartLabels(),
-      ],
-    );
-  }
-
-  Widget _buildPieChart() {
-    return SizedBox(
-      height: 200,
-      child: PieChart(
-        PieChartData(
-          sections: [
-            _buildPieChartSection(_totalIncome, Color(0xFF004B3A)),
-            _buildPieChartSection(_totalExpenses, Color(0xFF800020)),
-            _buildPieChartSection(_totalInvestments, Color(0xFFB8860B)),
-          ],
-          centerSpaceRadius: 30,
-        ),
-      ),
-    );
-  }
-
-  PieChartSectionData _buildPieChartSection(double value, Color color) {
-    return PieChartSectionData(
-      color: color,
-      value: value,
-      radius: 60,
-      title: '',
-    );
-  }
-
-  Widget _buildPieChartLabels() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildPieChartLabel('Income', Color(0xFF004B3A)),
-        _buildPieChartLabel('Expenses', Color(0xFF800020)),
-        _buildPieChartLabel('Invested', Color(0xFFB8860B)),
-      ],
-    );
-  }
-
-  Widget _buildPieChartLabel(String text, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          color: color,
-        ),
-        SizedBox(height: 4),
-        Text(text),
-      ],
+    return ThemedPieChart(
+      incomeValue: _totalIncome,
+      expenseValue: _totalExpenses,
+      investedValue: _totalInvestments,
     );
   }
 
@@ -257,10 +212,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
             ),
             Text(
               '\$${_netWorth.toStringAsFixed(2)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
+                color: Color.fromARGB(255, 123, 122, 122),
               ),
             ),
           ],
@@ -284,10 +239,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
             ),
             Text(
               '\$${_totalInvestments.toStringAsFixed(2)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFB8860B),
+                color: Color.fromARGB(255, 123, 122, 122),
               ),
             ),
           ],
@@ -304,13 +259,24 @@ class _OverviewScreenState extends State<OverviewScreen> {
           'Recent Transactions',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         _buildTransactionList(),
       ],
     );
   }
 
   Widget _buildTransactionList() {
+    final ThemeData theme = Theme.of(context);
+    final Color incomeColor = theme.brightness == Brightness.light
+        ? const Color(0xFF004B3A) 
+        : const Color(0xFFA5C8AA);
+    final Color expenseColor = theme.brightness == Brightness.light
+        ? const Color(0xFFB00020)
+        : const Color(0xFFD6726D);
+    final Color investmentColor = theme.brightness == Brightness.light
+        ? const Color.fromARGB(255, 172, 141, 40) 
+        : const Color(0xFFC8B07D);
+
     return Column(
       children: _lastFiveTransactions.map((transaction) {
         String category = '';
@@ -324,28 +290,28 @@ class _OverviewScreenState extends State<OverviewScreen> {
           category = _expenseCategoryMap[transaction.categoryId] ?? 'Unknown';
           date = transaction.dateSpent;
           amount = transaction.amount;
-          amountColor = Color(0xFF800020);
+          amountColor = expenseColor;
           icon = Icons.arrow_upward;
           destinationScreen = ExpenseForm(expense: transaction);
         } else if (transaction is Income) {
           category = _incomeCategoryMap[transaction.categoryId] ?? 'Unknown';
           date = transaction.dateReceived;
           amount = transaction.amount;
-          amountColor = Color(0xFF004B3A);
+          amountColor = incomeColor;
           icon = Icons.arrow_downward;
           destinationScreen = IncomeForm(income: transaction);
         } else if (transaction is Investment) {
           category = transaction.investmentType;
           date = transaction.dateInvested;
-          amount = transaction.initialValue; // Use initial value for investments
-          amountColor = Color(0xFFB8860B);
+          amount = transaction.initialValue;
+          amountColor = investmentColor;
           icon = Icons.show_chart;
           destinationScreen = InvestmentForm(investment: transaction);
         }
 
         return ListTile(
           leading: Icon(icon, color: amountColor),
-          title: Text(category, style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(category, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(date),
           trailing: Text(
             '\$${amount.toStringAsFixed(2)}',
@@ -364,6 +330,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
+
+
   void _showAddOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -371,7 +339,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
         return Wrap(
           children: <Widget>[
             _buildAddOption('Add Income', Icons.attach_money, IncomeForm()),
-            _buildAddOption('Add Expense', Icons.shopping_cart, ExpenseForm()),
+            _buildAddOption('Add Expense', Icons.shopping_cart, const ExpenseForm()),
             _buildAddOption('Add Investment', Icons.show_chart, InvestmentForm()),
           ],
         );
@@ -392,4 +360,5 @@ class _OverviewScreenState extends State<OverviewScreen> {
       },
     );
   }
+  
 }
