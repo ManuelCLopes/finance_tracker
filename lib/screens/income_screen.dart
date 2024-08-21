@@ -5,6 +5,7 @@ import '../models/income.dart';
 import '../models/income_category.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/no_data.dart';
+import '../utils/currency_utils.dart'; // Import the currency utils
 import 'income_form.dart';
 import 'package:intl/intl.dart';
 
@@ -26,6 +27,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   bool _isLoading = true; // Flag to indicate loading state
   double _totalMonthIncome = 0.0;
   String _monthLabel = 'Current Month'; // Label for the card, default is 'Current Month'
+  String _currencySymbol = '\$'; // Default currency symbol
   ScrollController _scrollController = ScrollController();
   int _currentMonth = DateTime.now().month; // Track the current displayed month
   int _currentYear = DateTime.now().year;
@@ -51,6 +53,9 @@ class _IncomeScreenState extends State<IncomeScreen> {
 
     // Map category IDs to their names
     _categoryMap = {for (var category in categories) category.id!: category.name};
+
+    // Load the currency symbol
+    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
     // Calculate the initial values for the card based on the first income in the list
     if (incomes.isNotEmpty) {
@@ -88,23 +93,23 @@ class _IncomeScreenState extends State<IncomeScreen> {
   }
 
   void _onScrollUpdate() {
-  if (_scrollController.hasClients) {
-    double itemHeight = 100.0; // Average height of each item
-    int firstVisibleIndex = (_scrollController.offset / itemHeight).floor();
+    if (_scrollController.hasClients) {
+      double itemHeight = 100.0; // Average height of each item
+      int firstVisibleIndex = (_scrollController.offset / itemHeight).floor();
 
-    if (firstVisibleIndex >= 0 && firstVisibleIndex < _incomes.length) {
-      DateTime firstVisibleDate = DateTime.parse(_incomes[firstVisibleIndex].dateReceived);
-      int visibleMonth = firstVisibleDate.month;
-      int visibleYear = firstVisibleDate.year;
+      if (firstVisibleIndex >= 0 && firstVisibleIndex < _incomes.length) {
+        DateTime firstVisibleDate = DateTime.parse(_incomes[firstVisibleIndex].dateReceived);
+        int visibleMonth = firstVisibleDate.month;
+        int visibleYear = firstVisibleDate.year;
 
-      if (visibleMonth != _currentMonth || visibleYear != _currentYear) {
-        _currentMonth = visibleMonth;
-        _currentYear = visibleYear;
-        _updateMonthLabel(visibleMonth, visibleYear, _incomes);
+        if (visibleMonth != _currentMonth || visibleYear != _currentYear) {
+          _currentMonth = visibleMonth;
+          _currentYear = visibleYear;
+          _updateMonthLabel(visibleMonth, visibleYear, _incomes);
+        }
       }
     }
   }
-}
 
   void _addOrEditIncome({Income? income}) async {
     await Navigator.push(
@@ -179,7 +184,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     Text(
-                      '\$${_totalMonthIncome.toStringAsFixed(2)}',
+                      '${_totalMonthIncome.toStringAsFixed(2)} $_currencySymbol',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -227,7 +232,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
               subtitle: Text(income.dateReceived),
               onTap: () => _addOrEditIncome(income: income),
               trailing: Text(
-                '\$${income.amount.toStringAsFixed(2)}',
+                '${income.amount.toStringAsFixed(2)} $_currencySymbol',
                 style: TextStyle(
                   fontSize: 18,
                   color: Theme.of(context).primaryColor,

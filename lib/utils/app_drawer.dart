@@ -50,6 +50,13 @@ class AppDrawer extends StatelessWidget {
               themeProvider.toggleTheme(!isDarkMode);
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Settings'),
+            onTap: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+          ),
         ],
       ),
     );

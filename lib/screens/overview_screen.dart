@@ -14,6 +14,7 @@ import '../models/investment.dart';
 import '../models/expense_category.dart';
 import '../models/income_category.dart';
 import '../utils/app_scaffold.dart';
+import '../utils/currency_utils.dart';
 import '../utils/theme_pie_chart.dart';
 
 class OverviewScreen extends StatefulWidget {
@@ -37,6 +38,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
   double _netWorth = 0.0;
   bool _hasData = true;
   bool _isLoading = true;
+  String _currencySymbol = '\$'; // Default currency symbol
+
   List<dynamic> _lastFiveTransactions = [];
 
   Map<int, String> _expenseCategoryMap = {};
@@ -72,6 +75,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
     double totalExpenses = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
     double totalInvestments = investments.fold(0.0, (sum, investment) => sum + investment.currentValue);
 
+    // Load the currency symbol
+    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
     double netWorth = totalIncome - totalExpenses + totalInvestments;
 
     // Sort and combine the transactions to get the last five
@@ -211,7 +216,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
-              '\$${_netWorth.toStringAsFixed(2)}',
+              '${_netWorth.toStringAsFixed(2)} $_currencySymbol',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -238,7 +243,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
-              '\$${_totalInvestments.toStringAsFixed(2)}',
+              '${_totalInvestments.toStringAsFixed(2)} $_currencySymbol',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -314,7 +319,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
           title: Text(category, style: const TextStyle(fontWeight: FontWeight.bold)),
           subtitle: Text(date),
           trailing: Text(
-            '\$${amount.toStringAsFixed(2)}',
+            '${amount.toStringAsFixed(2)} $_currencySymbol',
             style: TextStyle(color: amountColor, fontSize: 14),
           ),
           onTap: destinationScreen != null

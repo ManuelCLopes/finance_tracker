@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
+import 'screens/settings_screen.dart';
 import 'utils/backup_helper.dart';
 import 'utils/theme.dart'; // Import the theme file
 import 'screens/home_screen.dart';
@@ -42,7 +43,11 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.themeMode,
-      home: HomeScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => HomeScreen(),
+        '/settings': (context) => SettingsScreen(),
+      },
     );
   }
 }

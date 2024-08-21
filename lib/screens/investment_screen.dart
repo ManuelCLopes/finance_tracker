@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
 import '../utils/app_scaffold.dart';
+import '../utils/currency_utils.dart';
 import '../utils/no_data.dart';
 import 'investment_form.dart';
 
 class InvestmentScreen extends StatefulWidget {
   final Key? key;
 
-  InvestmentScreen({this.key}) : super(key: key);
+  const InvestmentScreen({this.key}) : super(key: key);
 
   @override
   _InvestmentScreenState createState() => _InvestmentScreenState();
@@ -21,6 +22,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   bool _isLoading = true;
   double _totalInvested = 0.0;
   double _percentageReturn = 0.0;
+  String _currencySymbol = '\$'; // Default currency symbol
+
 
   @override
   void didChangeDependencies() {
@@ -42,6 +45,9 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     double totalInitial = investments.fold(0.0, (sum, investment) => sum + investment.initialValue);
 
     double percentageReturn = totalInitial > 0 ? ((totalInvested - totalInitial) / totalInitial) * 100 : 0;
+
+    // Load the currency symbol
+    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
     setState(() {
       _investments = investments;
@@ -114,7 +120,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '\$${_totalInvested.toStringAsFixed(2)}',
+                        '${_totalInvested.toStringAsFixed(2)} $_currencySymbol',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -172,7 +178,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              '\$${totalCurrent.toStringAsFixed(2)}',
+              '${totalCurrent.toStringAsFixed(2)} $_currencySymbol',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(width: 8),
@@ -188,8 +194,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         Column(
           children: investments.map((investment) {
             return ListTile(
-              title: Text('Initial: \$${investment.initialValue.toStringAsFixed(2)}'),
-              subtitle: Text('Current: \$${investment.currentValue.toStringAsFixed(2)}'),
+              title: Text('Initial: ${investment.initialValue.toStringAsFixed(2)} $_currencySymbol'),
+              subtitle: Text('Current: ${investment.currentValue.toStringAsFixed(2)} $_currencySymbol'),
               trailing: Text(
                 investment.dateInvested,
                 style: const TextStyle(

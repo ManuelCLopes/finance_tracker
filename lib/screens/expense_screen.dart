@@ -4,6 +4,7 @@ import '../databases/expense_dao.dart';
 import '../models/expense.dart';
 import '../models/expense_category.dart';
 import '../utils/app_scaffold.dart';
+import '../utils/currency_utils.dart';
 import '../utils/no_data.dart';
 import 'package:intl/intl.dart';
 
@@ -25,6 +26,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   List<Expense> _expenses = [];
   bool _hasData = true;
   double _visibleMonthTotal = 0.0;
+  String _currencySymbol = '\$'; // Default currency symbol
   int _currentMonth = DateTime.now().month;
   int _currentYear = DateTime.now().year;
   Map<int, String> _categoryMap = {};  // Map with int keys and String values
@@ -50,6 +52,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
     double totalCurrentMonthExpenses = 0.0;
     Map<String, double> monthlyTotals = {};
+
+    // Load the currency symbol
+    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
     DateTime now = DateTime.now();
     int currentMonth = now.month;
@@ -137,7 +142,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       body: _hasData ? _buildExpenseContent() : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditExpense(),
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -176,7 +181,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   Text(
-                    '\$${_visibleMonthTotal.toStringAsFixed(2)}',
+                    '${_visibleMonthTotal.toStringAsFixed(2)} $_currencySymbol',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -187,7 +192,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               ),
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -221,7 +226,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               subtitle: Text(expense.dateSpent),
               onTap: () => _addOrEditExpense(expense: expense),
               trailing: Text(
-                '\$${expense.amount.toStringAsFixed(2)}',
+                '${expense.amount.toStringAsFixed(2)} $_currencySymbol',
                 style: TextStyle(
                   fontSize: 18,
                   color: Theme.of(context).primaryColor,
@@ -230,7 +235,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             );
           }).toList(),
         ),
-        Divider(),
+        const Divider(),
       ],
     );
   }
