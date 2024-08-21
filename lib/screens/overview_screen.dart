@@ -40,7 +40,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   bool _isLoading = true;
   String _currencySymbol = '\$'; // Default currency symbol
 
-  List<dynamic> _lastFiveTransactions = [];
+  List<dynamic> _lastTransactions = [];
 
   Map<int, String> _expenseCategoryMap = {};
   Map<int, String> _incomeCategoryMap = {};
@@ -66,21 +66,21 @@ class _OverviewScreenState extends State<OverviewScreen> {
     _expenseCategoryMap = {for (var category in expenseCategories) category.id!: category.name};
     _incomeCategoryMap = {for (var category in incomeCategories) category.id!: category.name};
 
-    // Load transactions
+    // Load transactions (consider fetching only the recent 10 transactions at the database level)
     List<Income> incomes = await _incomeDao.getAllIncomes();
     List<Expense> expenses = await _expenseDao.getAllExpenses();
     List<Investment> investments = await _investmentDao.getAllInvestments();
 
+    // Load the currency symbol
+    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
+
     double totalIncome = incomes.fold(0.0, (sum, income) => sum + income.amount);
     double totalExpenses = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
     double totalInvestments = investments.fold(0.0, (sum, investment) => sum + investment.currentValue);
-
-    // Load the currency symbol
-    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
     double netWorth = totalIncome - totalExpenses + totalInvestments;
 
-    // Sort and combine the transactions to get the last five
-    _lastFiveTransactions = [
+    // Combine, sort, and then take only the last 10 transactions
+    List<dynamic> transactions = [
       ...expenses,
       ...incomes,
       ...investments,
@@ -103,6 +103,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
         }
         return dateB.compareTo(dateA); // Sort by most recent first
       });
+
+    // Limit the transactions to the last 10
+    _lastTransactions = transactions.take(10).toList();
 
     setState(() {
       _totalIncome = totalIncome;
@@ -283,7 +286,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
         : const Color(0xFFC8B07D);
 
     return Column(
-      children: _lastFiveTransactions.map((transaction) {
+      children: _lastTransactions.map((transaction) {
         String category = '';
         String date = '';
         double amount = 0.0;
