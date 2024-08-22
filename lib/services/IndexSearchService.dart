@@ -4,7 +4,7 @@ class IndexSearchService {
   static void searchIndex(
     String input, 
     BuildContext context, 
-    Function(String symbol, String name) onSelectETF,
+    Function(String symbol, String name)onSelectETF,
   ) {
     input = input.trim().toUpperCase();
 
@@ -38,8 +38,7 @@ class IndexSearchService {
         {'symbol': 'DAX', 'name': 'Global X DAX Germany ETF'},
       ], onSelectETF);
     } else {
-      // Handle other cases or return null
-      onSelectETF('', ''); // Or any suitable fallback
+      return;
     }
   }
 

@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
-import '../services/IndexSearchService.dart';
 import '../utils/currency_utils.dart';
 import '../services/finnhub_service.dart';
+import '../services/crypto_service.dart';
+import '../services/IndexSearchService.dart';
 
 class InvestmentForm extends StatefulWidget {
   final Investment? investment;
@@ -19,11 +20,13 @@ class _InvestmentFormState extends State<InvestmentForm> {
   final _formKey = GlobalKey<FormState>();
   final InvestmentDao _investmentDao = InvestmentDao();
   final List<String> _investmentTypes = [
-    'Stocks & ETFs',
+    'Stocks',
+    'ETFs',
+    'Cryptocurrency',
     'Constant Return',
     'Other'
   ];
-  final List<String> _durations = ['-', '3 months', '6 months', '12 months']; // Valid duration options
+  final List<String> _durations = ['-', '3 months', '6 months', '12 months'];
 
   late String _selectedType;
   late TextEditingController _initialValueController;
@@ -31,12 +34,12 @@ class _InvestmentFormState extends State<InvestmentForm> {
   late TextEditingController _dateController;
   late TextEditingController _annualReturnController;
   late TextEditingController _investmentProductController;
-  String _selectedDuration = '-'; // Initialize with a default value
+  String _selectedDuration = '-';
   late double _stockQuantity;
   late String _stockName;
   DateTime? _selectedDate;
   double? _currentValue;
-  String _currencySymbol = '\$'; // Default currency symbol
+  String _currencySymbol = '\$';
 
   @override
   void initState() {
@@ -46,19 +49,19 @@ class _InvestmentFormState extends State<InvestmentForm> {
     _initialValueController = TextEditingController(text: widget.investment?.initialValue.toString() ?? '');
     _annualReturnController = TextEditingController(text: widget.investment?.annualReturn?.toString() ?? '');
     _investmentProductController = TextEditingController(text: widget.investment?.investmentProduct ?? '');
-    _selectedDuration = widget.investment?.duration ?? _durations.first; // Initialize with stored or default duration
+    _selectedDuration = widget.investment?.duration ?? _durations.first;
     _selectedDate = widget.investment != null ? DateTime.parse(widget.investment!.dateInvested) : DateTime.now();
     _dateController = TextEditingController(text: _formatDate(_selectedDate!));
-    _stockQuantity = widget.investment?.quantity ?? 0.0; // Load existing quantity
-    _stockName = widget.investment?.investmentProduct ?? ''; // Load existing product name
-    _currentValue = widget.investment?.currentValue; // Load existing current value
+    _stockQuantity = widget.investment?.quantity ?? 0.0;
+    _stockName = widget.investment?.investmentProduct ?? '';
+    _currentValue = widget.investment?.currentValue;
 
-    _loadCurrencySymbol(); // Load the currency symbol asynchronously
+    _loadCurrencySymbol();
   }
 
   Future<void> _loadCurrencySymbol() async {
-    _currencySymbol = await CurrencyUtils.getCurrencySymbol(); // Get currency symbol from utility
-    setState(() {}); // Refresh UI after loading currency symbol
+    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
+    setState(() {});
   }
 
   @override
@@ -90,40 +93,66 @@ class _InvestmentFormState extends State<InvestmentForm> {
     }
   }
 
-  Future<void> _fetchStockName() async {
+  Future<void> _fetchFinancialData() async {
     String input = _symbolController.text.trim().toUpperCase();
 
-    IndexSearchService.searchIndex(
-      input, 
-      context, 
-      (symbol, name) async {
-        if (symbol.isNotEmpty && name.isNotEmpty) {
+    try {
+      if (_selectedType == 'Cryptocurrency') {
+        final cryptoDetails = await CryptoService().getCryptoDetails(input);
+        if (cryptoDetails != null) {
           setState(() {
-            _symbolController.text = symbol;
-            _stockName = name;
+            _stockName = cryptoDetails['name'] ?? 'Cryptocurrency Not Found';
+            _currentValue = cryptoDetails['current_price']?.toDouble();
+            if (_currentValue != null) {
+              final initialValue = double.tryParse(_initialValueController.text) ?? 0.0;
+              _stockQuantity = initialValue / _currentValue!;
+            }
           });
         } else {
-          final stockName = await FinnhubService.getStockName(input);
           setState(() {
-            _stockName = stockName ?? 'Product Not Found';
+            _stockName = _stockName;
           });
         }
-      }
-    );
+      } else if (_selectedType == 'ETFs') {
+        IndexSearchService.searchIndex(
+          input,
+          context,
+          (symbol, name) async {
+              setState(() {
+                _symbolController.text = symbol;
+                _stockName = name;
+              });
+            });
+          }
+          else {
+            final stockName = await FinnhubService.getStockName(input);
+            setState(() {
+              _stockName = stockName ?? 'Product Not Found';
+            });
+          }
+    } catch (e) {
+      setState(() {
+        _stockName = 'Error fetching data';
+      });
+    }
   }
 
   Future<void> _calculateStockQuantity() async {
     final initialValue = double.tryParse(_initialValueController.text) ?? 0.0;
     if (initialValue > 0 && _symbolController.text.isNotEmpty) {
-      final stockPrice = await FinnhubService.getHistoricalData(
-        _symbolController.text,
-        _dateController.text,
-      );
-      if (stockPrice != null) {
-        setState(() {
-          _stockQuantity = initialValue / stockPrice;
-          _currentValue = _stockQuantity * stockPrice; // Update current value
-        });
+      if (_selectedType == 'Stocks' || _selectedType == 'ETFs') {
+        final stockPrice = await FinnhubService.getHistoricalData(
+          _symbolController.text,
+          _dateController.text,
+        );
+        if (stockPrice != null) {
+          setState(() {
+            _stockQuantity = initialValue / stockPrice;
+            _currentValue = _stockQuantity * stockPrice;
+          });
+        }
+      } else if (_selectedType == 'Cryptocurrency') {
+        await _fetchFinancialData(); // Fetch crypto data if the selected type is Cryptocurrency
       }
     }
   }
@@ -135,12 +164,12 @@ class _InvestmentFormState extends State<InvestmentForm> {
         symbol: _symbolController.text,
         investmentType: _selectedType,
         initialValue: double.tryParse(_initialValueController.text) ?? 0,
-        currentValue: _currentValue, // Set current value
+        currentValue: _currentValue,
         dateInvested: _formatDate(_selectedDate!),
-        investmentProduct: _selectedType == 'Constant Return' ? _investmentProductController.text : _stockName, // Save the product name
-        quantity: _stockQuantity, // Save the calculated quantity
+        investmentProduct: _selectedType == 'Cryptocurrency' ? _stockName : (_selectedType == 'Constant Return' ? _investmentProductController.text : _stockName),
+        quantity: _stockQuantity,
         annualReturn: double.tryParse(_annualReturnController.text),
-        duration: _selectedDuration, // Use selected duration
+        duration: _selectedDuration,
       );
 
       if (widget.investment == null) {
@@ -175,7 +204,6 @@ class _InvestmentFormState extends State<InvestmentForm> {
           key: _formKey,
           child: Column(
             children: [
-              // Date Input at the top
               TextFormField(
                 controller: _dateController,
                 decoration: InputDecoration(
@@ -188,7 +216,6 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 readOnly: true,
                 onTap: () => _selectDate(context),
               ),
-              // Investment Type Dropdown
               DropdownButtonFormField<String>(
                 value: _selectedType,
                 items: _investmentTypes.map((String type) {
@@ -200,21 +227,21 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 onChanged: (value) {
                   setState(() {
                     _selectedType = value!;
+                    _stockName = '';
+                    _stockQuantity = 0.0;
+                    _currentValue = null;
                   });
                 },
                 decoration: const InputDecoration(labelText: 'Investment Type'),
               ),
-              // Conditionally show fields based on investment type
-              if (_selectedType == 'Stocks & ETFs') ...[
-                // Symbol Input
+              if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
                 TextFormField(
                   controller: _symbolController,
                   decoration: const InputDecoration(labelText: 'Symbol'),
                   onChanged: (value) {
-                    _fetchStockName(); // Fetch stock name as the user types
+                    _fetchFinancialData(); // Fetch data for both stock/ETF and cryptocurrency
                   },
                 ),
-                // Display Stock Name
                 if (_stockName.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -227,7 +254,6 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   ),
               ],
               if (_selectedType == 'Constant Return') ...[
-                // Investment Product Input
                 TextFormField(
                   controller: _investmentProductController,
                   decoration: const InputDecoration(
@@ -235,13 +261,11 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     hintText: 'e.g., Trade Republic',
                   ),
                 ),
-                // Annual Return Input
                 TextFormField(
                   controller: _annualReturnController,
                   decoration: const InputDecoration(labelText: 'Annual Return (%)'),
                   keyboardType: TextInputType.number,
                 ),
-                // Duration Dropdown
                 DropdownButtonFormField<String>(
                   value: _selectedDuration,
                   items: _durations.map((String duration) {
@@ -261,15 +285,12 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   ),
                 ),
               ],
-              // Initial Value Input
               TextFormField(
                 controller: _initialValueController,
                 decoration: const InputDecoration(labelText: 'Initial Value'),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
-                  if (_selectedType == 'Stocks & ETFs') {
-                    _calculateStockQuantity(); // Calculate stock quantity after entering the initial value
-                  }
+                  _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -278,16 +299,14 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   return null;
                 },
               ),
-              // Display Stock Quantity
-              if (_selectedType == 'Stocks & ETFs')
+              if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    'Stock Quantity: ${_stockQuantity.toStringAsFixed(4)}',
+                    '${_selectedType == 'Cryptocurrency' ? 'Crypto' : 'Stock/ETF'} Quantity: ${_stockQuantity.toStringAsFixed(4)}',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-              // Display Current Value
               if (_currentValue != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
