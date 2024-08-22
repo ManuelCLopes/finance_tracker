@@ -3,8 +3,8 @@ import '../models/investment.dart';
 import '../databases/investment_dao.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/currency_utils.dart';
-import '../services/alpha_vantage_service.dart';
-import 'investment_form.dart';  // Ensure you import the InvestmentForm
+import '../services/finnhub_service.dart';
+import 'investment_form.dart';
 
 class InvestmentScreen extends StatefulWidget {
   final Key? key;
@@ -41,64 +41,115 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     // Fetch investments from the database
     List<Investment> investments = await _investmentDao.getAllInvestments();
 
-    // Calculate initial total invested and current value
+    // Calculate initial total invested
     double totalInvested = investments.fold(0.0, (sum, inv) => sum + inv.initialValue);
-    double totalCurrentValue = investments.fold(0.0, (sum, inv) => sum + (inv.currentValue ?? inv.initialValue));
 
-    // Update the UI with the fetched investments
+    // Set state with initial values
     setState(() {
       _investments = investments;
       _totalInvested = totalInvested;
-      _totalCurrentValue = totalCurrentValue;
-      _percentageChange = (totalCurrentValue - totalInvested) / totalInvested * 100;
-      _isLoading = false;
     });
 
-    // Fetch real-time data for each investment and update the UI
-    _updateInvestmentsWithRealTimeData();
+    // Fetch real-time data and update the UI
+    await _updateInvestmentsWithCurrentValue();
+
+    // Calculate the percentage change and update the UI
+    setState(() {
+      _percentageChange = (_totalCurrentValue - _totalInvested) / _totalInvested * 100;
+      _isLoading = false;
+    });
   }
 
-  Future<void> _updateInvestmentsWithRealTimeData() async {
+  Future<void> _updateInvestmentsWithCurrentValue() async {
     double updatedTotalCurrentValue = 0.0;
 
     for (var investment in _investments) {
-      final realTimeData = await _fetchRealTimeData(investment.symbol);
-      if (realTimeData != null) {
-        double currentValue = double.parse(realTimeData['05. price']);
+      if (investment.investmentType == 'Stocks') {
+        // Fetch real-time data for stocks
+        final currentPrice = await _fetchRealTimeData(investment.symbol);
+        if (currentPrice != null) {
+          final currentValue = investment.quantity! * currentPrice;
+          updatedTotalCurrentValue += currentValue;
+
+          Investment updatedInvestment = investment.copyWith(
+            currentValue: currentValue,
+          );
+
+          // Save updated investment back to the database
+          await _investmentDao.updateInvestment(updatedInvestment);
+
+          setState(() {
+            _investments[_investments.indexOf(investment)] = updatedInvestment;
+          });
+        } else {
+          updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
+        }
+      } else if (investment.investmentType == 'Constant Return') {
+        final currentValue = _calculateConstantReturnCurrentValue(investment);
         updatedTotalCurrentValue += currentValue;
 
-        Investment updatedInvestment = Investment(
-          id: investment.id,
-          symbol: investment.symbol,
-          investmentType: investment.investmentType,
-          initialValue: investment.initialValue,
+        Investment updatedInvestment = investment.copyWith(
           currentValue: currentValue,
-          dateInvested: investment.dateInvested,
         );
+
+        // Save updated investment back to the database
+        await _investmentDao.updateInvestment(updatedInvestment);
 
         setState(() {
           _investments[_investments.indexOf(investment)] = updatedInvestment;
         });
       } else {
+        // Handle other investment types (e.g., Bonds, Real Estate)
         updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
       }
     }
 
-    // Recalculate totals after updating all investments
     setState(() {
       _totalCurrentValue = updatedTotalCurrentValue;
-      _percentageChange = (_totalCurrentValue - _totalInvested) / _totalInvested * 100;
     });
   }
 
-  Future<Map<String, dynamic>?> _fetchRealTimeData(String? symbol) async {
+  double _calculateConstantReturnCurrentValue(Investment investment) {
+    final initialDate = DateTime.parse(investment.dateInvested);
+    final currentDate = DateTime.now();
+    final durationMonths = _getDurationInMonths(investment.duration ?? '-');
+    final endDate = initialDate.add(Duration(days: 30 * durationMonths));
+
+    if (currentDate.isAfter(endDate)) {
+      // If the current date is after the investment period, cap the value at the duration end
+      final yearsPassed = durationMonths / 12;
+      return investment.initialValue * (1 + (investment.annualReturn! / 100) * yearsPassed);
+    } else {
+      // Calculate the value based on the time passed within the investment period
+      final yearsPassed = currentDate.difference(initialDate).inDays / 365.25;
+      return investment.initialValue * (1 + (investment.annualReturn! / 100) * yearsPassed);
+    }
+  }
+
+  int _getDurationInMonths(String duration) {
+    switch (duration) {
+      case '3 months':
+        return 3;
+      case '6 months':
+        return 6;
+      case '12 months':
+        return 12;
+      default:
+        return 0;
+    }
+  }
+
+  Future<double?> _fetchRealTimeData(String? symbol) async {
     if (symbol == null || symbol.isEmpty) return null;
 
     try {
-      final data = await AlphaVantageService.getRealTimeData(symbol);
-      return data;
+      final currentPrice = await FinnhubService.getRealTimeData(symbol);
+      if (currentPrice == null) {
+        print('No data found for symbol: $symbol');
+      }
+      return currentPrice;
     } catch (e) {
-      print('Error fetching real-time data: $e');
+      print('Error fetching real-time data for symbol: $symbol - $e');
       return null;
     }
   }
@@ -180,8 +231,8 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
               ],
             ),
           ],
-        )
-      )
+        ),
+      ),
     );
   }
 
@@ -238,7 +289,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            investment.symbol ?? 'Unknown Symbol',
+                            investment.investmentProduct ?? 'Unknown Product', // Show investment product name
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -246,7 +297,9 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '${investment.currentValue?.toStringAsFixed(2)} $_currencySymbol',
+                              investment.currentValue != null
+                                  ? '${investment.currentValue!.toStringAsFixed(2)} $_currencySymbol'
+                                  : 'N/A',
                               style: TextStyle(
                                 color: Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,

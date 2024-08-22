@@ -1,7 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:finance_tracker/screens/expense_form.dart';
 import 'package:finance_tracker/screens/income_form.dart';
 import 'package:finance_tracker/screens/investment_form.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
@@ -41,17 +41,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
   String _currencySymbol = '\$'; // Default currency symbol
 
   List<dynamic> _lastTransactions = [];
-
   Map<int, String> _expenseCategoryMap = {};
   Map<int, String> _incomeCategoryMap = {};
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadData(); 
+    _loadData();
   }
-
-  void loadData() => _OverviewScreenState()._loadData();
 
   Future<void> _loadData() async {
     setState(() {
@@ -76,7 +73,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
     double totalIncome = incomes.fold(0.0, (sum, income) => sum + income.amount);
     double totalExpenses = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
-    double totalInvestments = investments.fold(0.0, (sum, investment) => sum + investment.currentValue!);
+    double totalInvestments = investments.fold(0.0, (sum, investment) => sum + (investment.currentValue ?? 0.0));
     double netWorth = totalIncome - totalExpenses + totalInvestments;
 
     // Combine, sort, and then take only the last 10 transactions
@@ -121,7 +118,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Overview',
-      body: _isLoading 
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _hasData ? _buildDataContent() : _buildNoDataContent(),
       floatingActionButton: _hasData ? _buildFloatingActionButton() : null,
@@ -276,13 +273,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
   Widget _buildTransactionList() {
     final ThemeData theme = Theme.of(context);
     final Color incomeColor = theme.brightness == Brightness.light
-        ? const Color(0xFF004B3A) 
+        ? const Color(0xFF004B3A)
         : const Color(0xFFA5C8AA);
     final Color expenseColor = theme.brightness == Brightness.light
         ? const Color(0xFFB00020)
         : const Color(0xFFD6726D);
     final Color investmentColor = theme.brightness == Brightness.light
-        ? const Color.fromARGB(255, 172, 141, 40) 
+        ? const Color.fromARGB(255, 172, 141, 40)
         : const Color(0xFFC8B07D);
 
     return Column(
@@ -311,7 +308,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
         } else if (transaction is Investment) {
           category = transaction.investmentType!;
           date = transaction.dateInvested;
-          amount = transaction.initialValue;
+          amount = transaction.currentValue ?? transaction.initialValue;
           amountColor = investmentColor;
           icon = Icons.show_chart;
           destinationScreen = InvestmentForm(investment: transaction);
@@ -337,8 +334,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
       }).toList(),
     );
   }
-
-
 
   void _showAddOptions(BuildContext context) {
     showModalBottomSheet(
@@ -368,5 +363,4 @@ class _OverviewScreenState extends State<OverviewScreen> {
       },
     );
   }
-  
 }

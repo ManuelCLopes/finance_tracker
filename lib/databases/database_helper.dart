@@ -72,11 +72,15 @@ class DatabaseHelper {
       CREATE TABLE investments (
         id TEXT PRIMARY KEY,
         user_id TEXT,
-        investment_type TEXT,
         symbol TEXT,
+        investment_type TEXT,
         initial_value REAL,
         current_value REAL,
-        date_invested TEXT
+        date_invested TEXT,
+        investment_product TEXT,
+        quantity REAL,
+        annual_return REAL,
+        duration TEXT
       )
     ''');
 

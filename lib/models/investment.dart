@@ -1,41 +1,81 @@
 class Investment {
   final String id;
-  final String? investmentType;
   final String? symbol;
+  final String? investmentType;
   final double initialValue;
-  double? currentValue; // Make this non-final if you want to modify it later
+  double? currentValue;
   final String dateInvested;
+  final String? investmentProduct;
+  double? quantity;
+  double? annualReturn;
+  String? duration;
 
   Investment({
     required this.id,
-    this.investmentType,
     this.symbol,
+    this.investmentType,
     required this.initialValue,
     this.currentValue,
     required this.dateInvested,
+    this.investmentProduct,
+    required this.quantity, 
+    this.annualReturn, 
+    this.duration,
   });
 
-  // Factory constructor to create an instance from a map
-  factory Investment.fromMap(Map<String, dynamic> map) {
+  Investment copyWith({
+    String? id,
+    String? symbol,
+    String? investmentType,
+    double? initialValue,
+    double? currentValue,
+    String? dateInvested,
+    String? investmentProduct,
+    double? quantity,
+    double? annualReturn,
+    String? duration,
+  }) {
     return Investment(
-      id: map['id'] as String,
-      investmentType: map['investment_type'] as String?,
-      symbol: map['symbol'] as String?,
-      initialValue: (map['initial_value'] as num?)?.toDouble() ?? 0.0, // Default to 0.0 if null
-      currentValue: (map['current_value'] as num?)?.toDouble(), // Handle null for optional fields
-      dateInvested: map['date_invested'] as String,
+      id: id ?? this.id,
+      symbol: symbol ?? this.symbol,
+      investmentType: investmentType ?? this.investmentType,
+      initialValue: initialValue ?? this.initialValue,
+      currentValue: currentValue ?? this.currentValue,
+      dateInvested: dateInvested ?? this.dateInvested,
+      investmentProduct: investmentProduct ?? this.investmentProduct,
+      quantity: quantity ?? this.quantity,
+      annualReturn: annualReturn ?? this.annualReturn,
+      duration: duration ?? this.duration,
     );
   }
 
-  // Convert an instance to a map for database insertion
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'investment_type': investmentType,
       'symbol': symbol,
+      'investment_type': investmentType,
       'initial_value': initialValue,
       'current_value': currentValue,
       'date_invested': dateInvested,
+      'investment_product': investmentProduct,
+      'quantity': quantity,
+      'annual_return': annualReturn,
+      'duration': duration
     };
+  }
+
+  static Investment fromMap(Map<String, dynamic> map) {
+    return Investment(
+      id: map['id'],
+      symbol: map['symbol'],
+      investmentType: map['investment_type'],
+      initialValue: map['initial_value'],
+      currentValue: map['current_value'],
+      dateInvested: map['date_invested'],
+      investmentProduct: map['investment_product'],
+      quantity: map['quantity'],
+      annualReturn: map['annual_return'],
+      duration: map['duration']
+    );
   }
 }
