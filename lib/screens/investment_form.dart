@@ -20,9 +20,6 @@ class _InvestmentFormState extends State<InvestmentForm> {
   final InvestmentDao _investmentDao = InvestmentDao();
   final List<String> _investmentTypes = [
     'Stocks & ETFs',
-    'Bonds',
-    'Real Estate',
-    'Mutual Funds',
     'Constant Return',
     'Other'
   ];
