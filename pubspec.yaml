@@ -34,5 +34,7 @@ flutter:
 
   uses-material-design: true
   assets:
-    - assets/images/no_data.svg
-    - assets/images/savings.svg
+    - assets/images/savings_light.svg
+    - assets/images/savings_dark.svg
+    - assets/images/no_data_light.svg
+    - assets/images/no_data_dark.svg

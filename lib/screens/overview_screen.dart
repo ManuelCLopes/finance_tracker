@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:finance_tracker/screens/expense_form.dart';
 import 'package:finance_tracker/screens/income_form.dart';
 import 'package:finance_tracker/screens/investment_form.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../databases/income_category_dao.dart';
@@ -116,11 +116,19 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isLightMode = theme.brightness == Brightness.light;
+
+    // Choose the appropriate SVG file based on the theme
+    final String assetName = isLightMode
+        ? 'assets/images/savings_light.svg'
+        : 'assets/images/savings_dark.svg';
+
     return AppScaffold(
       title: 'Overview',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _hasData ? _buildDataContent() : _buildNoDataContent(),
+          : _hasData ? _buildDataContent() : _buildNoDataContent(assetName),
       floatingActionButton: _hasData ? _buildFloatingActionButton() : null,
     );
   }
@@ -143,7 +151,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  Widget _buildNoDataContent() {
+  Widget _buildNoDataContent(String assetName) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -158,9 +166,9 @@ class _OverviewScreenState extends State<OverviewScreen> {
           ),
           const SizedBox(height: 48),
           SvgPicture.asset(
-            'assets/images/savings.svg',
-            width: 150,
-            height: 150,
+            assetName,
+            width: 200,
+            height: 200,
           ),
           const SizedBox(height: 60),
           _buildNoDataButton('Add First Income', IncomeForm()),
@@ -257,20 +265,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   Widget _buildRecentTransactions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recent Transactions',
-          style: Theme.of(context).textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 16),
-        _buildTransactionList(),
-      ],
-    );
-  }
-
-  Widget _buildTransactionList() {
     final ThemeData theme = Theme.of(context);
     final Color incomeColor = theme.brightness == Brightness.light
         ? const Color(0xFF004B3A)

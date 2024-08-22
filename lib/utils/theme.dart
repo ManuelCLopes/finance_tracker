@@ -81,7 +81,7 @@ class AppTheme {
     brightness: Brightness.dark,
     primaryColor: const Color.fromARGB(255, 254, 251, 245),
     hintColor: const Color(0xFFB39B72),
-    scaffoldBackgroundColor: const Color.fromARGB(255, 0, 12, 6),
+    scaffoldBackgroundColor: const Color.fromARGB(255, 14, 9, 0),
 
     colorScheme: const ColorScheme.dark(
       primary: Color.fromARGB(255, 254, 251, 245),
@@ -95,7 +95,7 @@ class AppTheme {
     ),
 
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color.fromARGB(255, 0, 12, 6),
+      backgroundColor: Color.fromARGB(255, 14, 9, 0),
       titleTextStyle: TextStyle(color: Color.fromARGB(255, 254, 251, 245), fontSize: 20, fontWeight: FontWeight.bold),
     ),
 

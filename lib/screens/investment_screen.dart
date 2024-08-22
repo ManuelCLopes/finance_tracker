@@ -4,6 +4,7 @@ import '../databases/investment_dao.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/currency_utils.dart';
 import '../services/finnhub_service.dart';
+import '../utils/no_data.dart';
 import 'investment_form.dart';
 
 class InvestmentScreen extends StatefulWidget {
@@ -165,18 +166,22 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Investments',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _buildInvestmentContent(),
+          : _investments.isEmpty 
+              ? NoDataScreen()
+              : _buildInvestmentContent(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _addOrEditInvestment(),
-        child: const Icon(Icons.add),
-      ),
+          onPressed: () => _addOrEditInvestment(),
+          child: const Icon(Icons.add),
+        ) 
     );
   }
+
 
   Widget _buildInvestmentContent() {
     return SingleChildScrollView(
