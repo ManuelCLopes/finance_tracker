@@ -76,7 +76,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
     double totalIncome = incomes.fold(0.0, (sum, income) => sum + income.amount);
     double totalExpenses = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
-    double totalInvestments = investments.fold(0.0, (sum, investment) => sum + investment.currentValue);
+    double totalInvestments = investments.fold(0.0, (sum, investment) => sum + investment.currentValue!);
     double netWorth = totalIncome - totalExpenses + totalInvestments;
 
     // Combine, sort, and then take only the last 10 transactions
@@ -134,8 +134,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_totalIncome > 0 || _totalExpenses > 0) _buildIncomeVsExpensesSummary(),
-          if (_totalIncome > 0 || _totalExpenses > 0) const SizedBox(height: 16),
+          if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) _buildIncomeVsExpensesSummary(),
+          if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) const SizedBox(height: 16),
           _buildNetWorthSummary(),
           const SizedBox(height: 8),
           _buildInvestmentSummary(),
@@ -309,7 +309,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
           icon = Icons.arrow_downward;
           destinationScreen = IncomeForm(income: transaction);
         } else if (transaction is Investment) {
-          category = transaction.investmentType;
+          category = transaction.investmentType!;
           date = transaction.dateInvested;
           amount = transaction.initialValue;
           amountColor = investmentColor;

@@ -18,6 +18,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
   final List<String> _investmentTypes = ['Stocks', 'Bonds', 'Real Estate', 'Mutual Funds', 'Other'];
 
   late String _selectedType;
+  late TextEditingController _symbolController;
   late TextEditingController _initialValueController;
   late TextEditingController _currentValueController;
   late TextEditingController _dateController;
@@ -27,6 +28,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
   void initState() {
     super.initState();
     _selectedType = widget.investment?.investmentType ?? _investmentTypes.first;
+    _symbolController = TextEditingController(text: widget.investment?.symbol ?? '');
     _initialValueController = TextEditingController(text: widget.investment?.initialValue.toString() ?? '');
     _currentValueController = TextEditingController(text: widget.investment?.currentValue.toString() ?? '');
     _selectedDate = widget.investment != null ? DateTime.parse(widget.investment!.dateInvested) : DateTime.now();
@@ -35,6 +37,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   @override
   void dispose() {
+    _symbolController.dispose();
     _initialValueController.dispose();
     _currentValueController.dispose();
     _dateController.dispose();
@@ -98,8 +101,8 @@ class _InvestmentFormState extends State<InvestmentForm> {
     if (_formKey.currentState!.validate()) {
       final investment = Investment(
         id: widget.investment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        userId: '1', // Replace with actual user ID
         investmentType: _selectedType,
+        symbol: _symbolController.text.trim(), // Add the symbol
         initialValue: double.tryParse(_initialValueController.text) ?? 0,
         currentValue: double.tryParse(_currentValueController.text) ?? 0,
         dateInvested: _formatDate(_selectedDate!),
@@ -148,6 +151,16 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   });
                 },
                 decoration: const InputDecoration(labelText: 'Investment Type'),
+              ),
+              TextFormField(
+                controller: _symbolController,
+                decoration: const InputDecoration(labelText: 'Investment Symbol'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the investment symbol';
+                  }
+                  return null;
+                },
               ),
               TextFormField(
                 controller: _initialValueController,

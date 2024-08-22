@@ -17,7 +17,7 @@ class FinancialService {
 
     double totalIncome = incomes.fold(0, (sum, item) => sum + item.amount);
     double totalExpense = expenses.fold(0, (sum, item) => sum + item.amount);
-    double totalInvestments = investments.fold(0, (sum, item) => sum + item.currentValue);
+    double totalInvestments = investments.fold(0, (sum, item) => sum + item.currentValue!);
     double totalSavings = savings.fold(0, (sum, item) => sum + item.currentAmount);
 
     return totalIncome + totalInvestments + totalSavings - totalExpense;

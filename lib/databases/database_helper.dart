@@ -21,21 +21,13 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'finance_tracker.db');
     return await openDatabase(
       path,
-      version: 2, // Update version number if schema changes
+      version: 1,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await _createTables(db);
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < newVersion) {
-      await _dropTables(db);
-      await _createTables(db);
-    }
   }
 
   Future<void> _createTables(Database db) async {
@@ -81,6 +73,7 @@ class DatabaseHelper {
         id TEXT PRIMARY KEY,
         user_id TEXT,
         investment_type TEXT,
+        symbol TEXT,
         initial_value REAL,
         current_value REAL,
         date_invested TEXT
@@ -106,16 +99,6 @@ class DatabaseHelper {
         net_worth REAL
       )
     ''');
-  }
-
-  Future<void> _dropTables(Database db) async {
-    await db.execute('DROP TABLE IF EXISTS income_categories');
-    await db.execute('DROP TABLE IF EXISTS expense_categories');
-    await db.execute('DROP TABLE IF EXISTS incomes');
-    await db.execute('DROP TABLE IF EXISTS expenses');
-    await db.execute('DROP TABLE IF EXISTS investments');
-    await db.execute('DROP TABLE IF EXISTS savings');
-    await db.execute('DROP TABLE IF EXISTS net_worth');
   }
 
   Future<void> bulkInsert(

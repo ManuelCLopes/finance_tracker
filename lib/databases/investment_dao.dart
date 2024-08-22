@@ -7,7 +7,11 @@ class InvestmentDao {
 
   Future<void> insertInvestment(Investment investment) async {
     final db = await _dbHelper.database;
-    await db.insert('investments', investment.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'investments',
+      investment.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<Investment>> getInvestmentsByUserId(String userId) async {
@@ -44,6 +48,10 @@ class InvestmentDao {
 
   Future<List<Investment>> getAllInvestments() async {
     final db = await _dbHelper.database;
+
+    // Ensure the 'investmentType' column exists
+    await _ensureSchemaUpdate(db);
+
     final List<Map<String, dynamic>> maps = await db.query('investments');
 
     return List.generate(maps.length, (i) {
@@ -63,5 +71,18 @@ class InvestmentDao {
         print('Error inserting investment: $investment. Error: $e');
       }
     }
+  }
+
+  // Method to ensure the 'investmentType' column exists
+  Future<void> _ensureSchemaUpdate(Database db) async {
+    await db.execute(
+      'ALTER TABLE investments ADD COLUMN investmentType TEXT',
+    ).catchError((e) {
+      if (e is DatabaseException && e.isDuplicateColumnError()) {
+        // Column already exists, ignore the error
+      } else {
+        throw e;
+      }
+    });
   }
 }
