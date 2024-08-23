@@ -270,7 +270,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    '${categoryChange.toStringAsFixed(2)}%',
+                    '${categoryChange.toStringAsFixed(2)} %',
                     style: TextStyle(
                       color: categoryPercentageColor,
                       fontWeight: FontWeight.bold,
