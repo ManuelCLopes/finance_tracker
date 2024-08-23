@@ -139,7 +139,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: AppLocalizations.of(context)?.translate('expenses') ?? 'Expenses',
+      title: AppLocalizations.of(context)!.translate('expenses'),
       body: _hasData ? _buildExpenseContent() : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditExpense(),
