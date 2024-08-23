@@ -103,10 +103,10 @@ class _InvestmentFormState extends State<InvestmentForm> {
         if (cryptoDetails != null) {
           setState(() {
             _stockName = cryptoDetails['name'] ?? 'Cryptocurrency Not Found';
-            _currentValue = cryptoDetails['current_price']?.toDouble();
-            if (_currentValue != null) {
+            if (cryptoDetails['current_price']?.toDouble() != null) {
               final initialValue = double.tryParse(_initialValueController.text) ?? 0.0;
-              _stockQuantity = initialValue / _currentValue!;
+              _currentValue = initialValue;
+              _stockQuantity = initialValue / cryptoDetails['current_price']?.toDouble();
             }
           });
         } else {
@@ -185,11 +185,13 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.investment == null ? AppLocalizations.of(context)?.translate('add_investment') ?? 'Add Investment' : 
-        AppLocalizations.of(context)?.translate('edit_investment') ?? 'Edit Investment'),
+        title: Text(
+          widget.investment == null
+              ? AppLocalizations.of(context)?.translate('add_investment') ?? 'Add Investment'
+              : AppLocalizations.of(context)?.translate('edit_investment') ?? 'Edit Investment'
+        ),
         actions: [
           if (widget.investment != null)
             IconButton(
@@ -204,143 +206,146 @@ class _InvestmentFormState extends State<InvestmentForm> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _dateController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)?.translate('date_invested') ?? 'Date Invested',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.calendar_today),
-                    onPressed: () => _selectDate(context),
-                  ),
-                ),
-                readOnly: true,
-                onTap: () => _selectDate(context),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedType,
-                items: _investmentTypes.map((String type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedType = value!;
-                    _stockName = '';
-                    _stockQuantity = 0.0;
-                    _currentValue = null;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)?.translate('investment_type') ?? 'Investment Type',
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
+        child: SingleChildScrollView(  // Added SingleChildScrollView
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,  // Added to align widgets to the start
+              children: [
                 TextFormField(
-                  controller: _symbolController,
+                  controller: _dateController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('symbol') ?? 'Symbol',
-                  ),
-                  onChanged: (value) {
-                    _fetchFinancialData(); // Fetch data for both stock/ETF and cryptocurrency
-                  },
-                ),
-                if (_stockName.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      _stockName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                    labelText: AppLocalizations.of(context)?.translate('date_invested') ?? 'Date Invested',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.calendar_today),
+                      onPressed: () => _selectDate(context),
                     ),
                   ),
-                const SizedBox(height: 16), 
-              ],
-              if (_selectedType == 'Constant Return') ...[
-                TextFormField(
-                  controller: _investmentProductController,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('investment_product') ?? 'Investment Product',
-                    hintText: 'e.g., Trade Republic',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _annualReturnController,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('annual_return') ?? 'Annual Return (%)',
-                  ),
-                  keyboardType: TextInputType.number,
+                  readOnly: true,
+                  onTap: () => _selectDate(context),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedDuration,
-                  items: _durations.map((String duration) {
+                  value: _selectedType,
+                  items: _investmentTypes.map((String type) {
                     return DropdownMenuItem(
-                      value: duration,
-                      child: Text(duration),
+                      value: type,
+                      child: Text(type),
                     );
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _selectedDuration = value!;
+                      _selectedType = value!;
+                      _stockName = '';
+                      _stockQuantity = 0.0;
+                      _currentValue = null;
                     });
                   },
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('duration') ?? 'Duration',
-                    hintText: 'Select duration',
+                    labelText: AppLocalizations.of(context)?.translate('investment_type') ?? 'Investment Type',
                   ),
                 ),
                 const SizedBox(height: 16),
+                if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
+                  TextFormField(
+                    controller: _symbolController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('symbol') ?? 'Symbol',
+                    ),
+                    onChanged: (value) {
+                      _fetchFinancialData(); // Fetch data for both stock/ETF and cryptocurrency
+                    },
+                  ),
+                  if (_stockName.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        _stockName,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                ],
+                if (_selectedType == 'Constant Return') ...[
+                  TextFormField(
+                    controller: _investmentProductController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('investment_product') ?? 'Investment Product',
+                      hintText: 'e.g., Trade Republic',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _annualReturnController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('annual_return') ?? 'Annual Return (%)',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _selectedDuration,
+                    items: _durations.map((String duration) {
+                      return DropdownMenuItem(
+                        value: duration,
+                        child: Text(duration),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDuration = value!;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('duration') ?? 'Duration',
+                      hintText: 'Select duration',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                TextFormField(
+                  controller: _initialValueController,
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)?.translate('initial_value') ?? 'Initial Value',
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AppLocalizations.of(context)?.translate('enter_initial_value') ?? 'Please enter an initial value';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      '${_selectedType == 'Cryptocurrency' ? AppLocalizations.of(context)?.translate('crypto_quantity') ?? 'Crypto Quantity' : 
+                      AppLocalizations.of(context)?.translate('stock_quantity') ?? 'Stock/ETF Quantity'}: ${_stockQuantity.toStringAsFixed(4)}',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                if (_currentValue != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Text(
+                      '${AppLocalizations.of(context)?.translate('current_value') ?? 'Current Value'}: ${_currentValue?.toStringAsFixed(2)} $_currencySymbol',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _saveInvestment,
+                  child: Text(AppLocalizations.of(context)?.translate('save_investment') ?? 'Save Investment'),
+                ),
               ],
-              TextFormField(
-                controller: _initialValueController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)?.translate('initial_value') ?? 'Initial Value',
-                ),
-                keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocalizations.of(context)?.translate('enter_initial_value') ?? 'Please enter an initial value';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    '${_selectedType == 'Cryptocurrency' ? AppLocalizations.of(context)?.translate('crypto_quantity') ?? 'Crypto Quantity' : 
-                    AppLocalizations.of(context)?.translate('stock_quantity') ?? 'Stock/ETF Quantity'}: ${_stockQuantity.toStringAsFixed(4)}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              if (_currentValue != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(
-                    '${AppLocalizations.of(context)?.translate('current_value') ?? 'Current Value'}: ${_currentValue?.toStringAsFixed(2)} $_currencySymbol',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveInvestment,
-                child: Text(AppLocalizations.of(context)?.translate('save_investment') ?? 'Save Investment'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
