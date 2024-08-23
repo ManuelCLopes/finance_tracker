@@ -22,6 +22,7 @@
   "current_month": "Current Month",
   "current_net_worth": "Current Net Worth",
   "current_value": "Current Value",
+  "dark_mode": "Dark Mode",
   "data_restored_csv": "Data restored from CSV",
   "data_restored_json": "Data restored from JSON",
   "date_invested": "Date Invested",
@@ -48,6 +49,7 @@
   "income": "Income",
   "income_categories": "Income Categories",
   "initial_value": "Initial Value",
+  "invested": "Invested",
   "investments": "Investments",
   "investment_product": "Investment Product",
   "investment_type": "Investment Type",
@@ -67,6 +69,10 @@
   "save_income": "Save Income",
   "save_investment": "Save Investment",
   "scheduled_backup": "Scheduled Backup",
+  "scheduled_backup_title": "Scheduled Backup",
+  "scheduled_backup_body": "Your data is being backed up.",
+  "scheduled_backup_channel_name": "Scheduled Backup",
+  "scheduled_backup_channel_description": "Notification for scheduled backup",
   "select_currency": "Select Currency Symbol",
   "select_language": "Select Language",
   "settings": "Settings",
@@ -79,5 +85,11 @@
   "total_investments": "Total Investments",
   "unknown": "Unknown",
   "unknown_product": "Unknown Product",
-  "your_net_worth": "Your Net Worth"
+  "your_net_worth": "Your Net Worth",
+  "select_backup_frequency": "Select Backup Frequency",
+  "daily": "Daily",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "unschedule_backup": "Unschedule Backup"
+  
 }

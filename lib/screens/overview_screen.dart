@@ -73,7 +73,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     // Load the currency symbol
     _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
-    double totalIncome = incomes.fold(0.0, (sum, income) => sum + income.amount);
+    double totalIncome = incomes.fold(0.0, (sum, income) => sum + income.amount - income.taxAmount);
     double totalExpenses = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
     double totalInvestments = investments.fold(0.0, (sum, investment) => sum + (investment.currentValue ?? 0.0));
     double netWorth = totalIncome - totalExpenses + totalInvestments;

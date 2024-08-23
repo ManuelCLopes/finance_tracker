@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import '../services/app_localizations_service.dart'; 
 
 class BackupFrequencyDialog extends StatelessWidget {
   final String? selectedFrequency;
   final void Function(String? frequency) onFrequencySelected;
   final VoidCallback onUnschedule;
 
-  BackupFrequencyDialog({super.key, 
+  BackupFrequencyDialog({
+    super.key,
     required this.selectedFrequency,
     required this.onFrequencySelected,
     required this.onUnschedule,
@@ -15,6 +17,8 @@ class BackupFrequencyDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Dialog(
       backgroundColor: Colors.white.withOpacity(0.9),
       shape: RoundedRectangleBorder(
@@ -28,7 +32,7 @@ class BackupFrequencyDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Select Backup Frequency',
+              localizations?.translate('select_backup_frequency') ?? 'Select Backup Frequency', 
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
@@ -41,7 +45,9 @@ class BackupFrequencyDialog extends StatelessWidget {
               children: _frequencies.map((frequency) {
                 bool isSelected = frequency == selectedFrequency;
                 return ChoiceChip(
-                  label: Text(frequency),
+                  label: Text(
+                    localizations?.translate(frequency.toLowerCase()) ?? frequency,
+                  ),
                   selected: isSelected,
                   onSelected: (selected) {
                     onFrequencySelected(selected ? frequency : null);
@@ -71,7 +77,7 @@ class BackupFrequencyDialog extends StatelessWidget {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
                   ),
-                  child: const Text('Unschedule Backup'),
+                  child: Text(localizations?.translate('unschedule_backup') ?? 'Unschedule Backup'), // Localized button text
                 ),
               ),
           ],

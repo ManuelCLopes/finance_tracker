@@ -22,6 +22,7 @@
   "current_month": "Mes actual",
   "current_net_worth": "Patrimonio neto actual",
   "current_value": "Valor actual",
+  "dark_mode": "Modo oscuro",
   "data_restored_csv": "Datos restaurados desde CSV",
   "data_restored_json": "Datos restaurados desde JSON",
   "date_invested": "Fecha de inversión",
@@ -48,6 +49,7 @@
   "income": "Ingreso",
   "income_categories": "Categorías de ingresos",
   "initial_value": "Valor inicial",
+  "invested": "Invertido",
   "investments": "Inversiones",
   "investment_product": "Producto de inversión",
   "investment_type": "Tipo de inversión",
@@ -67,6 +69,10 @@
   "save_income": "Guardar ingreso",
   "save_investment": "Guardar inversión",
   "scheduled_backup": "Respaldo programado",
+  "scheduled_backup_title": "Copia de Seguridad Programada",
+  "scheduled_backup_body": "Tus datos se están respaldando.",
+  "scheduled_backup_channel_name": "Copia de Seguridad Programada",
+  "scheduled_backup_channel_description": "Notificación de copia de seguridad programada",
   "select_currency": "Seleccionar símbolo de moneda",
   "select_language": "Seleccionar idioma",
   "settings": "Configuraciones",
@@ -79,5 +85,10 @@
   "total_investments": "Total de inversiones",
   "unknown": "Desconocido",
   "unknown_product": "Producto desconocido",
-  "your_net_worth": "Tu patrimonio neto"
+  "your_net_worth": "Tu patrimonio neto",
+  "select_backup_frequency": "Seleccionar Frecuencia de Copia de Seguridad",
+  "daily": "Diario",
+  "weekly": "Semanal",
+  "monthly": "Mensual",
+  "unschedule_backup": "Cancelar Copia de Seguridad"
 }

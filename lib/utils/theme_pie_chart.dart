@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../services/app_localizations_service.dart';
+
 class ThemedPieChart extends StatelessWidget {
   final double incomeValue;
   final double expenseValue;
@@ -23,11 +25,6 @@ class ThemedPieChart extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Estimated Net Worth',
-          style: theme.textTheme.headlineMedium,
-        ),
-        const SizedBox(height: 16),
         SizedBox(
           height: 200,
           child: PieChart(
@@ -52,7 +49,7 @@ class ThemedPieChart extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        _buildPieChartLabels(labelTextColor),
+        _buildPieChartLabels(labelTextColor, context),
       ],
     );
   }
@@ -69,13 +66,15 @@ class ThemedPieChart extends StatelessWidget {
     );
   }
 
-  Widget _buildPieChartLabels(Color labelTextColor) {
+  Widget _buildPieChartLabels(Color labelTextColor, BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildPieChartLabel('Income', const Color(0xFF3B3029), labelTextColor),  // Black Coffee
-        _buildPieChartLabel('Expenses', const Color(0xFF592E2D), labelTextColor),  // Hot Chocolate
-        _buildPieChartLabel('Invested', const Color(0xFFA57C55), labelTextColor),  // Gold Leaf
+        _buildPieChartLabel(localizations!.translate('income'), const Color(0xFF3B3029), labelTextColor),  // Black Coffee
+        _buildPieChartLabel(localizations.translate('expenses'), const Color(0xFF592E2D), labelTextColor),  // Hot Chocolate
+        _buildPieChartLabel(localizations.translate('invested'), const Color(0xFFA57C55), labelTextColor),  // Gold Leaf
       ],
     );
   }

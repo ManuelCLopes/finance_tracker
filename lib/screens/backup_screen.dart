@@ -35,7 +35,7 @@ class _BackupScreenState extends State<BackupScreen> {
             _selectedFrequency = frequency;
           });
           if (frequency != null) {
-            await BackupHelper.scheduleBackup(frequency: frequency);
+            await BackupHelper.scheduleBackup(context: context, frequency: frequency);
           }
         },
         onUnschedule: () async {
@@ -94,7 +94,7 @@ class _BackupScreenState extends State<BackupScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: Text(
-                  '${AppLocalizations.of(context)?.translate('scheduled_backup')}: $_selectedFrequency',
+                  '${AppLocalizations.of(context)?.translate('scheduled_backup')}: ${AppLocalizations.of(context)?.translate(_selectedFrequency!.toLowerCase())}',
                 ),
               ),
             Expanded(

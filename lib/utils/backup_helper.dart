@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,13 +12,14 @@ import '../databases/expense_dao.dart';
 import '../databases/income_category_dao.dart';
 import '../databases/income_dao.dart';
 import '../databases/investment_dao.dart';
+import '../services/app_localizations_service.dart';
 
 class BackupHelper {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  // Initialize notification plugin
-  static Future<void> initializeNotifications() async {
+  // Initialize notification plugin with localization
+  static Future<void> initializeNotifications(BuildContext context) async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('app_icon');
 
@@ -29,23 +31,31 @@ class BackupHelper {
     await _notificationsPlugin.initialize(initializationSettings);
   }
 
-  // Schedule backup
-  static Future<void> scheduleBackup({required String frequency}) async {
+  // Schedule backup with localization
+  static Future<void> scheduleBackup({
+    required BuildContext context,
+    required String frequency,
+  }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('backup_frequency', frequency);
 
-    _getIntervalFromFrequency(frequency);
+    _getIntervalFromFrequency(context, frequency);
+
+    // Get localized strings
+    final title = AppLocalizations.of(context)?.translate('scheduled_backup_title') ?? 'Scheduled Backup';
+    final body = AppLocalizations.of(context)?.translate('scheduled_backup_body') ?? 'Your data is being backed up.';
 
     await _notificationsPlugin.periodicallyShow(
       0,
-      'Scheduled Backup',
-      'Your data is being backed up.',
+      title,
+      body,
       RepeatInterval.everyMinute, // For testing; change to a suitable interval
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'backup_channel',
-          'Scheduled Backup',
-          channelDescription: 'Notification for scheduled backup',
+          AppLocalizations.of(context)?.translate('scheduled_backup_channel_name') ?? 'Scheduled Backup',
+          channelDescription: AppLocalizations.of(context)?.translate('scheduled_backup_channel_description') ??
+              'Notification for scheduled backup',
           importance: Importance.high,
           priority: Priority.high,
           playSound: true,
@@ -66,8 +76,6 @@ class BackupHelper {
 
     final file = File(filePath);
     await file.writeAsString(jsonEncode(data));
-
-    print('Scheduled backup saved at $filePath');
   }
 
   // Unschedule backup
@@ -187,16 +195,23 @@ class BackupHelper {
     };
   }
 
-  static int _getIntervalFromFrequency(String frequency) {
-    switch (frequency) {
-      case 'daily':
-        return 1;
-      case 'weekly':
-        return 7;
-      case 'monthly':
-        return 30;
-      default:
-        return 7;
+  static int _getIntervalFromFrequency(BuildContext context, String frequency) {
+    final localizations = AppLocalizations.of(context);  // Get the localization instance
+
+    // Fetch localized strings
+    String daily = localizations?.translate('daily') ?? 'Daily';
+    String weekly = localizations?.translate('weekly') ?? 'Weekly';
+    String monthly = localizations?.translate('monthly') ?? 'Monthly';
+
+    // Use if-else instead of switch for non-constant expressions
+    if (frequency == daily) {
+      return 1;
+    } else if (frequency == weekly) {
+      return 7;
+    } else if (frequency == monthly) {
+      return 30;
+    } else {
+      return 7;  // Default to weekly if no match is found
     }
   }
 }

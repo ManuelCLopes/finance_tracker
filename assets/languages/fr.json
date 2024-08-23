@@ -22,6 +22,7 @@
   "current_month": "Mois en cours",
   "current_net_worth": "Valeur nette actuelle",
   "current_value": "Valeur actuelle",
+  "dark_mode": "Mode sombre",
   "data_restored_csv": "Données restaurées depuis CSV",
   "data_restored_json": "Données restaurées depuis JSON",
   "date_invested": "Date d'investissement",
@@ -48,6 +49,7 @@
   "income": "Revenu",
   "income_categories": "Catégories de revenus",
   "initial_value": "Valeur initiale",
+  "invested": "Investi",
   "investments": "Investissements",
   "investment_product": "Produit d'investissement",
   "investment_type": "Type d'investissement",
@@ -67,6 +69,10 @@
   "save_income": "Enregistrer le revenu",
   "save_investment": "Enregistrer l'investissement",
   "scheduled_backup": "Sauvegarde planifiée",
+  "scheduled_backup_title": "Sauvegarde Planifiée",
+  "scheduled_backup_body": "Vos données sont en cours de sauvegarde.",
+  "scheduled_backup_channel_name": "Sauvegarde Planifiée",
+  "scheduled_backup_channel_description": "Notification de sauvegarde planifiée",
   "select_currency": "Sélectionner le symbole monétaire",
   "select_language": "Sélectionner la langue",
   "settings": "Paramètres",
@@ -79,5 +85,10 @@
   "total_investments": "Total des investissements",
   "unknown": "Inconnu",
   "unknown_product": "Produit inconnu",
-  "your_net_worth": "Votre valeur nette"
+  "your_net_worth": "Votre valeur nette",
+  "select_backup_frequency": "Sélectionner la Fréquence de Sauvegarde",
+  "daily": "Quotidien",
+  "weekly": "Hebdomadaire",
+  "monthly": "Mensuel",
+  "unschedule_backup": "Annuler la Sauvegarde"
 }
