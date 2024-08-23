@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (index == 2) {
       (_incomeKey.currentState as dynamic)?.loadData();
     } else if (index == 3) {
-      (_investmentKey.currentState as dynamic)?.loadInvestments();
+      (_investmentKey.currentState as dynamic)?.loadData();
     }
   }
 

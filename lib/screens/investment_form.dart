@@ -216,6 +216,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 readOnly: true,
                 onTap: () => _selectDate(context),
               ),
+              const SizedBox(height: 16),  // Add spacing between form fields
               DropdownButtonFormField<String>(
                 value: _selectedType,
                 items: _investmentTypes.map((String type) {
@@ -234,6 +235,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 },
                 decoration: const InputDecoration(labelText: 'Investment Type'),
               ),
+              const SizedBox(height: 16),  // Add spacing between form fields
               if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
                 TextFormField(
                   controller: _symbolController,
@@ -252,6 +254,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                           ),
                     ),
                   ),
+                const SizedBox(height: 16),  // Add spacing between form fields
               ],
               if (_selectedType == 'Constant Return') ...[
                 TextFormField(
@@ -261,11 +264,13 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     hintText: 'e.g., Trade Republic',
                   ),
                 ),
+                const SizedBox(height: 16),  // Add spacing between form fields
                 TextFormField(
                   controller: _annualReturnController,
                   decoration: const InputDecoration(labelText: 'Annual Return (%)'),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 16),  // Add spacing between form fields
                 DropdownButtonFormField<String>(
                   value: _selectedDuration,
                   items: _durations.map((String duration) {
@@ -284,6 +289,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     hintText: 'Select duration',
                   ),
                 ),
+                const SizedBox(height: 16),  // Add spacing between form fields
               ],
               TextFormField(
                 controller: _initialValueController,
@@ -299,6 +305,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),  // Add spacing between form fields
               if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
