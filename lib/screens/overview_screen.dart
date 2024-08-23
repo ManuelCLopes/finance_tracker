@@ -13,11 +13,13 @@ import '../models/income.dart';
 import '../models/investment.dart';
 import '../models/expense_category.dart';
 import '../models/income_category.dart';
+import '../services/app_localizations_service.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/currency_utils.dart';
 import '../utils/theme_pie_chart.dart';
 
 class OverviewScreen extends StatefulWidget {
+
   final Key? key;
   const OverviewScreen({this.key}) : super(key: key);
 
@@ -116,6 +118,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final ThemeData theme = Theme.of(context);
     final bool isLightMode = theme.brightness == Brightness.light;
 
@@ -125,42 +128,42 @@ class _OverviewScreenState extends State<OverviewScreen> {
         : 'assets/images/savings_dark.svg';
 
     return AppScaffold(
-      title: 'Overview',
+      title: localizations?.translate('overview_title') ?? 'Overview',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _hasData ? _buildDataContent() : _buildNoDataContent(assetName),
-      floatingActionButton: _hasData ? _buildFloatingActionButton() : null,
+          : _hasData ? _buildDataContent(localizations!) : _buildNoDataContent(assetName, localizations!),
+      floatingActionButton: _hasData ? _buildFloatingActionButton(localizations!) : null,
     );
   }
 
-  Widget _buildDataContent() {
+  Widget _buildDataContent(AppLocalizations localizations) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) _buildIncomeVsExpensesSummary(),
+          if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) _buildIncomeVsExpensesSummary(localizations),
           if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) const SizedBox(height: 16),
-          _buildNetWorthSummary(),
+          _buildNetWorthSummary(localizations),
           const SizedBox(height: 8),
-          _buildInvestmentSummary(),
+          _buildInvestmentSummary(localizations),
           const SizedBox(height: 32),
-          _buildRecentTransactions(),
+          _buildRecentTransactions(localizations),
         ],
       ),
     );
   }
 
-  Widget _buildNoDataContent(String assetName) {
+  Widget _buildNoDataContent(String assetName, AppLocalizations localizations) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Text(
-              'You seem new here! \nStart tracking your money',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+              localizations.translate('no_data_message'),
+              style: const TextStyle(fontSize: 18, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
           ),
@@ -171,11 +174,11 @@ class _OverviewScreenState extends State<OverviewScreen> {
             height: 200,
           ),
           const SizedBox(height: 60),
-          _buildNoDataButton('Add First Income', IncomeForm()),
+          _buildNoDataButton(localizations.translate('add_first_income'), IncomeForm()),
           const SizedBox(height: 16),
-          _buildNoDataButton('Add First Expense', const ExpenseForm()),
+          _buildNoDataButton(localizations.translate('add_first_expense'), const ExpenseForm()),
           const SizedBox(height: 16),
-          _buildNoDataButton('Add First Investment', InvestmentForm()),
+          _buildNoDataButton(localizations.translate('add_first_investment'), InvestmentForm()),
         ],
       ),
     );
@@ -193,16 +196,16 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  FloatingActionButton _buildFloatingActionButton() {
+  FloatingActionButton _buildFloatingActionButton(AppLocalizations localizations) {
     return FloatingActionButton(
       onPressed: () {
-        _showAddOptions(context);
+        _showAddOptions(context, localizations);
       },
       child: const Icon(Icons.add),
     );
   }
 
-  Widget _buildIncomeVsExpensesSummary() {
+  Widget _buildIncomeVsExpensesSummary(AppLocalizations localizations) {
     return ThemedPieChart(
       incomeValue: _totalIncome,
       expenseValue: _totalExpenses,
@@ -210,7 +213,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  Widget _buildNetWorthSummary() {
+  Widget _buildNetWorthSummary(AppLocalizations localizations) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -220,7 +223,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Current Net Worth',
+              localizations.translate('current_net_worth'),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
@@ -237,7 +240,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  Widget _buildInvestmentSummary() {
+  Widget _buildInvestmentSummary(AppLocalizations localizations) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -247,7 +250,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Total Investments',
+              localizations.translate('total_investments'),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
@@ -264,7 +267,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  Widget _buildRecentTransactions() {
+  Widget _buildRecentTransactions(AppLocalizations localizations) {
     final ThemeData theme = Theme.of(context);
     final Color incomeColor = theme.brightness == Brightness.light
         ? const Color(0xFF004B3A)
@@ -286,14 +289,14 @@ class _OverviewScreenState extends State<OverviewScreen> {
         Widget? destinationScreen;
 
         if (transaction is Expense) {
-          category = _expenseCategoryMap[transaction.categoryId] ?? 'Unknown';
+          category = _expenseCategoryMap[transaction.categoryId] ?? localizations.translate('unknown_category');
           date = transaction.dateSpent;
           amount = transaction.amount;
           amountColor = expenseColor;
           icon = Icons.arrow_upward;
           destinationScreen = ExpenseForm(expense: transaction);
         } else if (transaction is Income) {
-          category = _incomeCategoryMap[transaction.categoryId] ?? 'Unknown';
+          category = _incomeCategoryMap[transaction.categoryId] ?? localizations.translate('unknown');
           date = transaction.dateReceived;
           amount = transaction.amount;
           amountColor = incomeColor;
@@ -329,15 +332,15 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  void _showAddOptions(BuildContext context) {
+  void _showAddOptions(BuildContext context, AppLocalizations localizations) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
         return Wrap(
           children: <Widget>[
-            _buildAddOption('Add Income', Icons.attach_money, IncomeForm()),
-            _buildAddOption('Add Expense', Icons.shopping_cart, const ExpenseForm()),
-            _buildAddOption('Add Investment', Icons.show_chart, InvestmentForm()),
+            _buildAddOption(localizations.translate('add_income'), Icons.attach_money, IncomeForm()),
+            _buildAddOption(localizations.translate('add_expense'), Icons.shopping_cart, const ExpenseForm()),
+            _buildAddOption(localizations.translate('add_investment'), Icons.show_chart, InvestmentForm()),
           ],
         );
       },

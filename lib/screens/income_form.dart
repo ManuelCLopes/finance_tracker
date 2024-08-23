@@ -5,6 +5,8 @@ import '../databases/income_dao.dart';
 import '../models/income.dart';
 import '../models/income_category.dart';
 
+import '../services/app_localizations_service.dart'; // Import the localization package
+
 class IncomeForm extends StatefulWidget {
   final Income? income;
 
@@ -87,21 +89,21 @@ class _IncomeFormState extends State<IncomeForm> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Income'),
-          content: const Text('Are you sure you want to delete this income?'),
+          title: Text(AppLocalizations.of(context)?.translate('delete_income') ?? 'Delete Income'),
+          content: Text(AppLocalizations.of(context)?.translate('delete_income_confirmation') ?? 'Are you sure you want to delete this income?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); 
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _deleteIncome(); 
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(AppLocalizations.of(context)?.translate('delete') ?? 'Delete', style: const TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -134,7 +136,9 @@ class _IncomeFormState extends State<IncomeForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.income == null ? 'Add Income' : 'Edit Income'),
+        title: Text(widget.income == null
+            ? AppLocalizations.of(context)?.translate('add_income') ?? 'Add Income'
+            : AppLocalizations.of(context)?.translate('edit_income') ?? 'Edit Income'),
         actions: [
           if (widget.income != null)
             IconButton(
@@ -151,7 +155,7 @@ class _IncomeFormState extends State<IncomeForm> {
             children: [
               DropdownButtonFormField<String>(
                 value: _selectedCategory.isNotEmpty ? _selectedCategory : null,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('category') ?? 'Category'),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
                     value: category.id.toString(),
@@ -165,7 +169,7 @@ class _IncomeFormState extends State<IncomeForm> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please select a category';
+                    return AppLocalizations.of(context)?.translate('please_select_category') ?? 'Please select a category';
                   }
                   return null;
                 },
@@ -173,11 +177,11 @@ class _IncomeFormState extends State<IncomeForm> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('amount') ?? 'Amount'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
+                    return AppLocalizations.of(context)?.translate('please_enter_amount') ?? 'Please enter an amount';
                   }
                   return null;
                 },
@@ -185,11 +189,11 @@ class _IncomeFormState extends State<IncomeForm> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _taxAmountController,
-                decoration: const InputDecoration(labelText: 'Tax Amount'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('tax_amount') ?? 'Tax Amount'),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter the tax amount';
+                    return AppLocalizations.of(context)?.translate('please_enter_tax_amount') ?? 'Please enter the tax amount';
                   }
                   return null;
                 },
@@ -198,7 +202,7 @@ class _IncomeFormState extends State<IncomeForm> {
               TextFormField(
                 controller: _dateController,
                 decoration: InputDecoration(
-                  labelText: 'Date Received',
+                  labelText: AppLocalizations.of(context)?.translate('date_received') ?? 'Date Received',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_today),
                     onPressed: () => _selectDate(context),
@@ -210,7 +214,7 @@ class _IncomeFormState extends State<IncomeForm> {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveIncome,
-                child: const Text('Save Income'),
+                child: Text(AppLocalizations.of(context)?.translate('save_income') ?? 'Save Income'),
               ),
             ],
           ),

@@ -3,6 +3,7 @@ import '../models/expense_category.dart';
 import '../models/income_category.dart';
 import '../databases/expense_category_dao.dart';
 import '../databases/income_category_dao.dart';
+import '../services/app_localizations_service.dart';  // Import the localization service
 
 class CategoryManagementScreen extends StatefulWidget {
   @override
@@ -38,7 +39,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
         bool isExpense = true;
 
         return AlertDialog(
-          title: const Text('Add Category'),
+          title: Text(AppLocalizations.of(context)?.translate('add_category') ?? 'Add Category'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -46,18 +47,18 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 onChanged: (value) {
                   name = value;
                 },
-                decoration: const InputDecoration(labelText: 'Category Name'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('category_name') ?? 'Category Name'),
               ),
               DropdownButtonFormField<bool>(
                 value: isExpense,
                 items: [
-                  const DropdownMenuItem(value: true, child: Text('Expense')),
-                  const DropdownMenuItem(value: false, child: Text('Income')),
+                  DropdownMenuItem(value: true, child: Text(AppLocalizations.of(context)?.translate('expense') ?? 'Expense')),
+                  DropdownMenuItem(value: false, child: Text(AppLocalizations.of(context)?.translate('income') ?? 'Income')),
                 ],
                 onChanged: (value) {
                   isExpense = value!;
                 },
-                decoration: const InputDecoration(labelText: 'Category Type'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('category_type') ?? 'Category Type'),
               ),
             ],
           ),
@@ -66,7 +67,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -80,7 +81,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Add'),
+              child: Text(AppLocalizations.of(context)?.translate('add') ?? 'Add'),
             ),
           ],
         );
@@ -95,12 +96,12 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
         String name = category.name;
 
         return AlertDialog(
-          title: const Text('Edit Category'),
+          title: Text(AppLocalizations.of(context)?.translate('edit_category') ?? 'Edit Category'),
           content: TextField(
             onChanged: (value) {
               name = value;
             },
-            decoration: const InputDecoration(labelText: 'Category Name'),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('category_name') ?? 'Category Name'),
             controller: TextEditingController(text: category.name),
           ),
           actions: [
@@ -108,7 +109,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -122,7 +123,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: const Text('Save'),
+              child: Text(AppLocalizations.of(context)?.translate('save') ?? 'Save'),
             ),
           ],
         );
@@ -143,12 +144,12 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Categories'),
+        title: Text(AppLocalizations.of(context)?.translate('manage_categories') ?? 'Manage Categories'),
       ),
       body: ListView(
         children: [
-          const ListTile(
-            title: Text('Expense Categories'),
+          ListTile(
+            title: Text(AppLocalizations.of(context)?.translate('expense_categories') ?? 'Expense Categories'),
           ),
           ..._expenseCategories.map((category) {
             return ListTile(
@@ -167,10 +168,10 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 ],
               ),
             );
-          }).toList(),
+          }),
           const Divider(),
-          const ListTile(
-            title: Text('Income Categories'),
+          ListTile(
+            title: Text(AppLocalizations.of(context)?.translate('income_categories') ?? 'Income Categories'),
           ),
           ..._incomeCategories.map((category) {
             return ListTile(
@@ -189,7 +190,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
       floatingActionButton: FloatingActionButton(

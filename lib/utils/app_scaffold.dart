@@ -21,7 +21,7 @@ class AppScaffold extends StatelessWidget {
         title: Text(title),
         actions: actions,
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: body, 
       floatingActionButton: floatingActionButton,
     );

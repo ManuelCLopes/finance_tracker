@@ -4,6 +4,7 @@ import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../models/expense.dart';
 import '../models/expense_category.dart';
+import '../services/app_localizations_service.dart'; // Import the localization service
 
 class ExpenseForm extends StatefulWidget {
   final Expense? expense;
@@ -84,21 +85,24 @@ class _ExpenseFormState extends State<ExpenseForm> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Expense'),
-          content: const Text('Are you sure you want to delete this expense?'),
+          title: Text(AppLocalizations.of(context)?.translate('delete_expense') ?? 'Delete Expense'),
+          content: Text(AppLocalizations.of(context)?.translate('delete_expense_confirmation') ?? 'Are you sure you want to delete this expense?'),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
                 _deleteExpense(); // Delete the expense
               },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(
+                AppLocalizations.of(context)?.translate('delete') ?? 'Delete',
+                style: const TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
@@ -130,7 +134,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.expense == null ? 'Add Expense' : 'Edit Expense'),
+        title: Text(widget.expense == null
+            ? AppLocalizations.of(context)?.translate('add_expense') ?? 'Add Expense'
+            : AppLocalizations.of(context)?.translate('edit_expense') ?? 'Edit Expense'),
         actions: [
           if (widget.expense != null)
             IconButton(
@@ -148,9 +154,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
             children: [
               DropdownButtonFormField<String>(
                 value: _selectedCategory.isNotEmpty ? _selectedCategory : null,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)?.translate('category') ?? 'Category',
+                  contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
                 ),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
@@ -165,7 +171,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please select a category';
+                    return AppLocalizations.of(context)?.translate('please_select_category') ?? 'Please select a category';
                   }
                   return null;
                 },
@@ -173,14 +179,14 @@ class _ExpenseFormState extends State<ExpenseForm> {
               const SizedBox(height: 16), // Space between fields
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(
-                  labelText: 'Amount',
-                  contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)?.translate('amount') ?? 'Amount',
+                  contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter an amount';
+                    return AppLocalizations.of(context)?.translate('please_enter_amount') ?? 'Please enter an amount';
                   }
                   return null;
                 },
@@ -189,7 +195,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
               TextFormField(
                 controller: _dateController,
                 decoration: InputDecoration(
-                  labelText: 'Date Spent',
+                  labelText: AppLocalizations.of(context)?.translate('date_spent') ?? 'Date Spent',
                   contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_today),
@@ -203,7 +209,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
               Center( // Center the button
                 child: ElevatedButton(
                   onPressed: _saveExpense,
-                  child: const Text('Save Expense'),
+                  child: Text(AppLocalizations.of(context)?.translate('save_expense') ?? 'Save Expense'),
                 ),
               ),
             ],

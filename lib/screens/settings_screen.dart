@@ -1,25 +1,45 @@
 import 'package:flutter/material.dart';
-import '../utils/currency_utils.dart'; // Assuming CurrencyUtils is in the utils folder
+import '../services/app_localizations_service.dart';
+import '../services/localization_service.dart';
+import '../utils/currency_utils.dart';
 
 class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({Key? key}) : super(key: key);
+
   @override
   _SettingsScreenState createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _selectedCurrency = '';
+  late Locale _selectedLocale;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrency();
+    _loadSettings();
   }
 
-  Future<void> _loadCurrency() async {
-    String currency = await CurrencyUtils.getCurrencySymbol();
-    setState(() {
-      _selectedCurrency = currency;
-    });
+  Future<void> _loadSettings() async {
+    try {
+      String currency = await CurrencyUtils.getCurrencySymbol();
+      Locale locale = LocalizationService().getCurrentLocale();
+
+      setState(() {
+        _selectedCurrency = currency;
+        _selectedLocale = locale;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      // Handle the error appropriately
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load settings. Please try again.')),
+      );
+    }
   }
 
   void _updateCurrency(String? value) {
@@ -31,43 +51,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _updateLanguage(Locale? locale) {
+    if (locale != null) {
+      setState(() {
+        _selectedLocale = locale;
+      });
+      LocalizationService().setLocale(locale);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(localizations?.translate('settings_title') ?? 'Settings'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(localizations?.translate('settings_title') ?? 'Settings'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             ListTile(
-              contentPadding: EdgeInsets.zero, // Removes padding
-              title: const Text('Select Currency Symbol'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(localizations?.translate('select_currency') ?? 'Select Currency Symbol'),
               trailing: DropdownButton<String>(
                 value: _selectedCurrency,
                 items: const [
-                  DropdownMenuItem(
-                    value: '\$', // Dollar symbol
-                    child: Text('\$'),
-                  ),
-                  DropdownMenuItem(
-                    value: '€', // Euro symbol
-                    child: Text('€'),
-                  ),
-                  DropdownMenuItem(
-                    value: '£', // Pound symbol
-                    child: Text('£'),
-                  ),
-                  DropdownMenuItem(
-                    value: '¥', // Yen symbol
-                    child: Text('¥'),
-                  ),
+                  DropdownMenuItem(value: '\$', child: Text('\$')),
+                  DropdownMenuItem(value: '€', child: Text('€')),
+                  DropdownMenuItem(value: '£', child: Text('£')),
+                  DropdownMenuItem(value: '¥', child: Text('¥')),
                 ],
                 onChanged: _updateCurrency,
               ),
             ),
-            // Future configuration rows can be added here.
+            const SizedBox(height: 20),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(localizations?.translate('select_language') ?? 'Select Language'),
+              trailing: DropdownButton<Locale>(
+                value: _selectedLocale,
+                items: const [
+                  DropdownMenuItem(value: Locale('en'), child: Text('English')),
+                  DropdownMenuItem(value: Locale('pt'), child: Text('Português')),
+                  DropdownMenuItem(value: Locale('es'), child: Text('Español')),
+                  DropdownMenuItem(value: Locale('fr'), child: Text('Français')),
+                ],
+                onChanged: _updateLanguage,
+              ),
+            ),
           ],
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/backup_frequency_dialog.dart';
 import '../utils/backup_helper.dart';
+import '../services/app_localizations_service.dart'; // Import your localization service
 
 class BackupScreen extends StatefulWidget {
   @override
@@ -51,7 +52,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final filePath = await BackupHelper.exportToJson();
     if (filePath != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Backup saved as JSON in $filePath')),
+        SnackBar(content: Text('${AppLocalizations.of(context)?.translate('backup_saved_json')} $filePath')),
       );
     }
   }
@@ -60,7 +61,7 @@ class _BackupScreenState extends State<BackupScreen> {
     final filePath = await BackupHelper.exportToCsv();
     if (filePath != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Backup saved as CSV in $filePath')),
+        SnackBar(content: Text('${AppLocalizations.of(context)?.translate('backup_saved_csv')} $filePath')),
       );
     }
   }
@@ -68,14 +69,14 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _importFromJson() async {
     await BackupHelper.importFromJson();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data restored from JSON')),
+      SnackBar(content: Text(AppLocalizations.of(context)?.translate('data_restored_json') ?? 'Data restored from JSON')),
     );
   }
 
   Future<void> _importFromCsv() async {
     await BackupHelper.importFromCsv();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Data restored from CSV')),
+      SnackBar(content: Text(AppLocalizations.of(context)?.translate('data_restored_csv') ?? 'Data restored from CSV')),
     );
   }
 
@@ -83,7 +84,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Backup & Restore'),
+        title: Text(AppLocalizations.of(context)?.translate('backup_restore') ?? 'Backup & Restore'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,7 +94,7 @@ class _BackupScreenState extends State<BackupScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: Text(
-                  'Scheduled Backup: $_selectedFrequency',
+                  '${AppLocalizations.of(context)?.translate('scheduled_backup')}: $_selectedFrequency',
                 ),
               ),
             Expanded(
@@ -102,11 +103,11 @@ class _BackupScreenState extends State<BackupScreen> {
                 crossAxisSpacing: 16.0,
                 mainAxisSpacing: 16.0,
                 children: [
-                  _buildSquareButton('Export to JSON', Icons.file_copy, _exportToJson),
-                  _buildSquareButton('Export to CSV', Icons.table_chart, _exportToCsv),
-                  _buildSquareButton('Import JSON', Icons.file_download, _importFromJson),
-                  _buildSquareButton('Import CSV', Icons.file_upload, _importFromCsv),
-                  _buildSquareButton('Backup \nScheduling', Icons.schedule, _openFrequencySelector),
+                  _buildSquareButton(AppLocalizations.of(context)?.translate('export_to_json') ?? 'Export to JSON', Icons.file_copy, _exportToJson),
+                  _buildSquareButton(AppLocalizations.of(context)?.translate('export_to_csv') ?? 'Export to CSV', Icons.table_chart, _exportToCsv),
+                  _buildSquareButton(AppLocalizations.of(context)?.translate('import_json') ?? 'Import JSON', Icons.file_download, _importFromJson),
+                  _buildSquareButton(AppLocalizations.of(context)?.translate('import_csv') ?? 'Import CSV', Icons.file_upload, _importFromCsv),
+                  _buildSquareButton(AppLocalizations.of(context)?.translate('backup_scheduling') ?? 'Backup \nScheduling', Icons.schedule, _openFrequencySelector),
                 ],
               ),
             ),
@@ -124,7 +125,7 @@ class _BackupScreenState extends State<BackupScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, 
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Icon(icon, size: 40.0),

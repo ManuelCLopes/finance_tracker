@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/app_localizations_service.dart';
 import 'overview_screen.dart';
 import 'expense_screen.dart';
 import 'income_screen.dart';
@@ -54,22 +55,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: _screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: AppLocalizations.of(context)?.translate('home') ?? 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopify_outlined),
-            label: 'Expenses',
+            icon: const Icon(Icons.shopify_outlined),
+            label: AppLocalizations.of(context)?.translate('expenses') ?? 'Expenses',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money_outlined),
-            label: 'Income',
+            icon: const Icon(Icons.attach_money_outlined),
+            label: AppLocalizations.of(context)?.translate('income') ?? 'Income',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'Investments',
+            icon: const Icon(Icons.show_chart),
+            label: AppLocalizations.of(context)?.translate('investments') ?? 'Investments',
           ),
         ],
         currentIndex: _selectedIndex,

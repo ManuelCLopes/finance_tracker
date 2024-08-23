@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.6
   sqflite: ^2.0.0+4
   path_provider: ^2.0.11
@@ -38,3 +40,7 @@ flutter:
     - assets/images/savings_dark.svg
     - assets/images/no_data_light.svg
     - assets/images/no_data_dark.svg
+    - assets/languages/en.json
+    - assets/languages/es.json
+    - assets/languages/pt.json
+    - assets/languages/fr.json

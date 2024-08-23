@@ -3,6 +3,7 @@ import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../models/expense.dart';
 import '../models/expense_category.dart';
+import '../services/app_localizations_service.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/currency_utils.dart';
 import '../utils/no_data.dart';
@@ -87,6 +88,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     DateTime now = DateTime.now();
 
     if (month == now.month && year == now.year) {
+      // Current month and year
     } else {
       DateFormat('MMMM').format(DateTime(year, month));
     }
@@ -95,30 +97,29 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
     expenses.where((expense) {
       DateTime expenseDate = DateTime.parse(expense.dateSpent);
       return expenseDate.month == month && expenseDate.year == year;
-    }).fold(0.0, (sum, income) => sum + income.amount);
+    }).fold(0.0, (sum, expense) => sum + expense.amount);
 
-    setState(() {
-    });
+    setState(() {});
   }
 
   void _onScrollUpdate() {
-  if (_scrollController.hasClients) {
-    double itemHeight = 90.0; // Average height of each item
-    int firstVisibleIndex = (_scrollController.offset / itemHeight).floor();
+    if (_scrollController.hasClients) {
+      double itemHeight = 90.0; // Average height of each item
+      int firstVisibleIndex = (_scrollController.offset / itemHeight).floor();
 
-    if (firstVisibleIndex >= 0 && firstVisibleIndex < _expenses.length) {
-      DateTime firstVisibleDate = DateTime.parse(_expenses[firstVisibleIndex].dateSpent);
-      int visibleMonth = firstVisibleDate.month;
-      int visibleYear = firstVisibleDate.year;
+      if (firstVisibleIndex >= 0 && firstVisibleIndex < _expenses.length) {
+        DateTime firstVisibleDate = DateTime.parse(_expenses[firstVisibleIndex].dateSpent);
+        int visibleMonth = firstVisibleDate.month;
+        int visibleYear = firstVisibleDate.year;
 
-      if (visibleMonth != _currentMonth || visibleYear != _currentYear) {
-        _currentMonth = visibleMonth;
-        _currentYear = visibleYear;
-        _updateMonthLabel(visibleMonth, visibleYear, _expenses);
+        if (visibleMonth != _currentMonth || visibleYear != _currentYear) {
+          _currentMonth = visibleMonth;
+          _currentYear = visibleYear;
+          _updateMonthLabel(visibleMonth, visibleYear, _expenses);
+        }
       }
     }
   }
-}
 
   void _addOrEditExpense({Expense? expense}) async {
     await Navigator.push(
@@ -138,7 +139,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Expenses',
+      title: AppLocalizations.of(context)?.translate('expenses') ?? 'Expenses',
       body: _hasData ? _buildExpenseContent() : NoDataScreen(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditExpense(),
@@ -176,7 +177,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                 children: [
                   Text(
                     _currentMonth == DateTime.now().month && _currentYear == DateTime.now().year
-                        ? 'Current Month'
+                        ? AppLocalizations.of(context)?.translate('current_month') ?? 'Current Month'
                         : DateFormat('MMMM yyyy').format(DateTime(_currentYear, _currentMonth)),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
@@ -219,7 +220,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
         ),
         Column(
           children: expenses.map((expense) {
-            String categoryName = _categoryMap[expense.categoryId] ?? 'Unknown';
+            String categoryName = _categoryMap[expense.categoryId] ?? AppLocalizations.of(context)?.translate('unknown') ?? 'Unknown';
 
             return ListTile(
               title: Text(categoryName),

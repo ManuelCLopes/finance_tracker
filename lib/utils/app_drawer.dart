@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../screens/backup_screen.dart';
 import '../screens/category_management_screen.dart';
+import '../services/app_localizations_service.dart';
 import 'theme_provider.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -11,6 +12,8 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     bool isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+    var localization = AppLocalizations.of(context);
+
 
     return Drawer(
       child: ListView(
@@ -23,7 +26,7 @@ class AppDrawer extends StatelessWidget {
             ),
           ListTile(
             leading: const Icon(Icons.category),
-            title: const Text('Manage Categories'),
+            title: Text(localization!.translate('manage_categories')),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -34,7 +37,7 @@ class AppDrawer extends StatelessWidget {
           ),
            ListTile(
             leading: const Icon(Icons.backup),
-            title: const Text('Backup & Restore'),
+            title: Text(localization.translate('backup_restore')),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -45,14 +48,16 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
-            title: Text(isDarkMode ? 'Dark Mode' : 'Light Mode'),
+            title: isDarkMode ? 
+            Text(localization.translate('dark_mode')) : 
+            Text(localization.translate('light_mode')),
             onTap: () {
               themeProvider.toggleTheme(!isDarkMode);
             },
           ),
           ListTile(
             leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
+            title: Text(localization.translate('settings')),
             onTap: () {
               Navigator.pushNamed(context, '/settings');
             },

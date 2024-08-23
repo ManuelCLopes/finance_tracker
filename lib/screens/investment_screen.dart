@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/investment.dart';
 import '../databases/investment_dao.dart';
+import '../services/app_localizations_service.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/currency_utils.dart';
 import '../services/finnhub_service.dart';
@@ -166,38 +167,38 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return AppScaffold(
-      title: 'Investments',
+      title: localizations?.translate('investments') ?? 'Investments',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _investments.isEmpty 
               ? NoDataScreen()
-              : _buildInvestmentContent(),
+              : _buildInvestmentContent(context, localizations),
       floatingActionButton: FloatingActionButton(
-          onPressed: () => _addOrEditInvestment(),
-          child: const Icon(Icons.add),
-        ) 
+        onPressed: () => _addOrEditInvestment(),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
-
-  Widget _buildInvestmentContent() {
+  Widget _buildInvestmentContent(BuildContext context, AppLocalizations? localizations) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSummaryCard(),
+          _buildSummaryCard(context, localizations),
           const SizedBox(height: 16),
-          _buildGroupedInvestmentList(),
+          _buildGroupedInvestmentList(context, localizations),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(BuildContext context, AppLocalizations? localizations) {
     final Color percentageColor = _percentageChange >= 0 ? Colors.green : Colors.red;
 
     return Card(
@@ -213,7 +214,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           children: [
             // Label Text
             Text(
-              'Total Invested',
+              localizations?.translate('total_invested') ?? 'Total Invested',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             // Value and Percentage Column
@@ -241,7 +242,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     );
   }
 
-  Widget _buildGroupedInvestmentList() {
+  Widget _buildGroupedInvestmentList(BuildContext context, AppLocalizations? localizations) {
     // Group investments by type
     Map<String, List<Investment>> groupedInvestments = {};
     for (var investment in _investments) {
@@ -266,7 +267,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    entry.key,
+                    localizations?.translate(entry.key.toLowerCase()) ?? entry.key,
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -294,7 +295,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            investment.investmentProduct ?? 'Unknown Product', // Show investment product name
+                            investment.investmentProduct ?? localizations?.translate('unknown_product') ?? 'Unknown Product', // Show investment product name
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -304,7 +305,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                             Text(
                               investment.currentValue != null
                                   ? '${investment.currentValue!.toStringAsFixed(2)} $_currencySymbol'
-                                  : 'N/A',
+                                  : localizations?.translate('not_available') ?? 'N/A',
                               style: TextStyle(
                                 color: Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
+import '../services/app_localizations_service.dart';
 import '../utils/currency_utils.dart';
 import '../services/finnhub_service.dart';
 import '../services/crypto_service.dart';
@@ -118,18 +119,18 @@ class _InvestmentFormState extends State<InvestmentForm> {
           input,
           context,
           (symbol, name) async {
-              setState(() {
-                _symbolController.text = symbol;
-                _stockName = name;
-              });
-            });
-          }
-          else {
-            final stockName = await FinnhubService.getStockName(input);
             setState(() {
-              _stockName = stockName ?? 'Product Not Found';
+              _symbolController.text = symbol;
+              _stockName = name;
             });
           }
+        );
+      } else {
+        final stockName = await FinnhubService.getStockName(input);
+        setState(() {
+          _stockName = stockName ?? 'Product Not Found';
+        });
+      }
     } catch (e) {
       setState(() {
         _stockName = 'Error fetching data';
@@ -184,9 +185,11 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.investment == null ? 'Add Investment' : 'Edit Investment'),
+        title: Text(widget.investment == null ? AppLocalizations.of(context)?.translate('add_investment') ?? 'Add Investment' : 
+        AppLocalizations.of(context)?.translate('edit_investment') ?? 'Edit Investment'),
         actions: [
           if (widget.investment != null)
             IconButton(
@@ -195,6 +198,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 await _investmentDao.deleteInvestment(widget.investment!.id);
                 Navigator.pop(context);
               },
+              tooltip: AppLocalizations.of(context)?.translate('delete') ?? 'Delete',
             ),
         ],
       ),
@@ -207,7 +211,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
               TextFormField(
                 controller: _dateController,
                 decoration: InputDecoration(
-                  labelText: 'Date Invested',
+                  labelText: AppLocalizations.of(context)?.translate('date_invested') ?? 'Date Invested',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_today),
                     onPressed: () => _selectDate(context),
@@ -216,7 +220,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 readOnly: true,
                 onTap: () => _selectDate(context),
               ),
-              const SizedBox(height: 16),  // Add spacing between form fields
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: _selectedType,
                 items: _investmentTypes.map((String type) {
@@ -233,13 +237,17 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     _currentValue = null;
                   });
                 },
-                decoration: const InputDecoration(labelText: 'Investment Type'),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)?.translate('investment_type') ?? 'Investment Type',
+                ),
               ),
-              const SizedBox(height: 16),  // Add spacing between form fields
+              const SizedBox(height: 16),
               if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
                 TextFormField(
                   controller: _symbolController,
-                  decoration: const InputDecoration(labelText: 'Symbol'),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)?.translate('symbol') ?? 'Symbol',
+                  ),
                   onChanged: (value) {
                     _fetchFinancialData(); // Fetch data for both stock/ETF and cryptocurrency
                   },
@@ -254,23 +262,25 @@ class _InvestmentFormState extends State<InvestmentForm> {
                           ),
                     ),
                   ),
-                const SizedBox(height: 16),  // Add spacing between form fields
+                const SizedBox(height: 16), 
               ],
               if (_selectedType == 'Constant Return') ...[
                 TextFormField(
                   controller: _investmentProductController,
-                  decoration: const InputDecoration(
-                    labelText: 'Investment Product',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)?.translate('investment_product') ?? 'Investment Product',
                     hintText: 'e.g., Trade Republic',
                   ),
                 ),
-                const SizedBox(height: 16),  // Add spacing between form fields
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _annualReturnController,
-                  decoration: const InputDecoration(labelText: 'Annual Return (%)'),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)?.translate('annual_return') ?? 'Annual Return (%)',
+                  ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 16),  // Add spacing between form fields
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: _selectedDuration,
                   items: _durations.map((String duration) {
@@ -284,33 +294,36 @@ class _InvestmentFormState extends State<InvestmentForm> {
                       _selectedDuration = value!;
                     });
                   },
-                  decoration: const InputDecoration(
-                    labelText: 'Duration',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)?.translate('duration') ?? 'Duration',
                     hintText: 'Select duration',
                   ),
                 ),
-                const SizedBox(height: 16),  // Add spacing between form fields
+                const SizedBox(height: 16),
               ],
               TextFormField(
                 controller: _initialValueController,
-                decoration: const InputDecoration(labelText: 'Initial Value'),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)?.translate('initial_value') ?? 'Initial Value',
+                ),
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
                   _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter an initial value';
+                    return AppLocalizations.of(context)?.translate('enter_initial_value') ?? 'Please enter an initial value';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),  // Add spacing between form fields
+              const SizedBox(height: 16),
               if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    '${_selectedType == 'Cryptocurrency' ? 'Crypto' : 'Stock/ETF'} Quantity: ${_stockQuantity.toStringAsFixed(4)}',
+                    '${_selectedType == 'Cryptocurrency' ? AppLocalizations.of(context)?.translate('crypto_quantity') ?? 'Crypto Quantity' : 
+                    AppLocalizations.of(context)?.translate('stock_quantity') ?? 'Stock/ETF Quantity'}: ${_stockQuantity.toStringAsFixed(4)}',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -318,14 +331,14 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: Text(
-                    'Current Value: ${_currentValue?.toStringAsFixed(2)} $_currencySymbol',
+                    '${AppLocalizations.of(context)?.translate('current_value') ?? 'Current Value'}: ${_currentValue?.toStringAsFixed(2)} $_currencySymbol',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveInvestment,
-                child: const Text('Save Investment'),
+                child: Text(AppLocalizations.of(context)?.translate('save_investment') ?? 'Save Investment'),
               ),
             ],
           ),

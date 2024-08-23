@@ -3,9 +3,10 @@ import '../databases/income_category_dao.dart';
 import '../databases/income_dao.dart';
 import '../models/income.dart';
 import '../models/income_category.dart';
+import '../services/app_localizations_service.dart';
 import '../utils/app_scaffold.dart';
 import '../utils/no_data.dart';
-import '../utils/currency_utils.dart'; // Import the currency utils
+import '../utils/currency_utils.dart';
 import 'income_form.dart';
 import 'package:intl/intl.dart';
 
@@ -26,7 +27,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   bool _hasData = true;
   bool _isLoading = true; // Flag to indicate loading state
   double _totalMonthIncome = 0.0;
-  String _monthLabel = 'Current Month'; // Label for the card, default is 'Current Month'
+  String _monthLabel = ''; // Label for the card, default is empty
   String _currencySymbol = '\$'; // Default currency symbol
   ScrollController _scrollController = ScrollController();
   int _currentMonth = DateTime.now().month; // Track the current displayed month
@@ -75,7 +76,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
     DateTime now = DateTime.now();
 
     if (month == now.month && year == now.year) {
-      _monthLabel = 'Current Month';
+      _monthLabel = AppLocalizations.of(context)?.translate('current_month') ?? 'Current Month';
     } else {
       String monthName = DateFormat('MMMM').format(DateTime(year, month));
       _monthLabel = '$monthName $year';
@@ -129,7 +130,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'Income',
+      title: AppLocalizations.of(context)?.translate('income') ?? 'Income',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _hasData
@@ -225,7 +226,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
         Column(
           children: incomes.map((income) {
             // Get category name using the category ID
-            String categoryName = _categoryMap[income.categoryId] ?? 'Unknown';
+            String categoryName = _categoryMap[income.categoryId] ?? AppLocalizations.of(context)?.translate('unknown ')?? 'Unknown';
 
             return ListTile(
               title: Text(categoryName),
