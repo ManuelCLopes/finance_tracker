@@ -105,6 +105,50 @@ class DatabaseHelper {
     ''');
   }
 
+ Future<List<Map<String, dynamic>>> getAllExpenses() async {
+  final db = await database;
+  // Join expenses with categories table to get category name
+  return await db.rawQuery('''
+    SELECT 
+      --expenses.id, 
+      expense_categories.name AS category,
+      expenses.amount, 
+      expenses.date_spent 
+    FROM expenses
+    JOIN expense_categories ON expenses.category_id = expense_categories.id
+  ''');
+}
+
+Future<List<Map<String, dynamic>>> getAllIncomes() async {
+  final db = await database;
+  // Join incomes with categories table to get category name
+  return await db.rawQuery('''
+    SELECT 
+      --incomes.id, 
+      income_categories.name AS category,
+      incomes.amount, 
+      incomes.date_received, 
+      incomes.tax_amount 
+    FROM incomes
+    JOIN income_categories ON incomes.category_id = income_categories.id 
+  ''');
+}
+
+Future<List<Map<String, dynamic>>> getAllInvestments() async {
+  final db = await database;
+  // Join investments with categories table to get category name (if applicable)
+  // Adjust the join if investments don't have categories or if they have a different join condition
+  return await db.rawQuery('''
+    SELECT 
+      investments.id, 
+      investments.investment_type, 
+      investments.initial_value, 
+      investments.date_invested 
+    FROM investments
+  ''');
+}
+
+
   Future<void> bulkInsert(
       String tableName, List<Map<String, dynamic>> data, Transaction txn) async {
     for (var row in data) {

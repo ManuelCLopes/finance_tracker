@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../screens/backup_screen.dart';
 import '../screens/category_management_screen.dart';
+import '../screens/data_share_screen.dart';
 import '../services/app_localizations_service.dart';
 import 'theme_provider.dart';
 
@@ -60,6 +61,17 @@ class AppDrawer extends StatelessWidget {
             title: Text(localization.translate('settings')),
             onTap: () {
               Navigator.pushNamed(context, '/settings');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.camera_alt_outlined),
+            title: Text(localization.translate('Scan to web')),
+            onTap: () {
+              Navigator.pop(context);  // Close the drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DataEntryScreen()),
+              );
             },
           ),
         ],

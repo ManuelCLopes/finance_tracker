@@ -26,6 +26,7 @@ dependencies:
   shared_preferences: ^2.0.15
   http: ^1.2.2
   connectivity_plus: ^6.0.5
+  qr_code_scanner: ^1.0.0
 
 dev_dependencies:
   flutter_test:
