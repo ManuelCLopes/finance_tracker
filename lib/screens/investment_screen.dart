@@ -70,7 +70,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         // Fetch real-time data for stocks
         final currentPrice = await _fetchRealTimeData(investment.symbol);
         if (currentPrice != null) {
-          final currentValue = investment.quantity! * currentPrice;
+          final currentValue = (investment.quantity! * currentPrice).roundToDouble();
           updatedTotalCurrentValue += currentValue;
 
           Investment updatedInvestment = investment.copyWith(

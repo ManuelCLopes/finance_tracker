@@ -107,7 +107,6 @@ class DatabaseHelper {
 
  Future<List<Map<String, dynamic>>> getAllExpenses() async {
   final db = await database;
-  // Join expenses with categories table to get category name
   return await db.rawQuery('''
     SELECT 
       --expenses.id, 
@@ -121,7 +120,6 @@ class DatabaseHelper {
 
 Future<List<Map<String, dynamic>>> getAllIncomes() async {
   final db = await database;
-  // Join incomes with categories table to get category name
   return await db.rawQuery('''
     SELECT 
       --incomes.id, 
@@ -136,17 +134,19 @@ Future<List<Map<String, dynamic>>> getAllIncomes() async {
 
 Future<List<Map<String, dynamic>>> getAllInvestments() async {
   final db = await database;
-  // Join investments with categories table to get category name (if applicable)
-  // Adjust the join if investments don't have categories or if they have a different join condition
   return await db.rawQuery('''
     SELECT 
-      investments.id, 
+      --investments.id, 
+      investments.symbol,
       investments.investment_type, 
+      investments.date_invested,
       investments.initial_value, 
-      investments.date_invested 
+      investments.current_value, 
+      investments.investment_product
     FROM investments
   ''');
-}
+  }
+
 
 
   Future<void> bulkInsert(
