@@ -90,5 +90,6 @@
   "daily": "Quotidien",
   "weekly": "Hebdomadaire",
   "monthly": "Mensuel",
-  "unschedule_backup": "Annuler la Sauvegarde"
+  "unschedule_backup": "Annuler la Sauvegarde",
+  "view_on_web": "Afficher sur le Web"
 }

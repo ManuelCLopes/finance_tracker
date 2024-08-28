@@ -90,5 +90,6 @@
   "daily": "Diário",
   "weekly": "Semanal",
   "monthly": "Mensal",
-  "unschedule_backup": "Cancelar Backup"
+  "unschedule_backup": "Cancelar Backup",
+  "view_on_web": "Ver na Web"
 }

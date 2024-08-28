@@ -65,7 +65,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.camera_alt_outlined),
-            title: Text(localization.translate('Scan to web')),
+            title: Text(localization.translate('view_on_web')),
             onTap: () {
               Navigator.pop(context);  // Close the drawer
               Navigator.push(

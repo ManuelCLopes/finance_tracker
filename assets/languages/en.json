@@ -90,6 +90,6 @@
   "daily": "Daily",
   "weekly": "Weekly",
   "monthly": "Monthly",
-  "unschedule_backup": "Unschedule Backup"
-  
+  "unschedule_backup": "Unschedule Backup",
+  "view_on_web": "View on Web"
 }
