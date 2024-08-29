@@ -75,17 +75,33 @@ class IncomeDao {
     });
   }
 
-  Future<void> bulkInsertIncomes(List<Map<String, dynamic>> incomes, Transaction txn) async {
-    for (var income in incomes) {
-      try {
-        await txn.insert(
+  Future<void> insertOrUpdateTransaction(Map<String, dynamic> incomeData, Database db) async {
+    try {
+      if (incomeData['id'] == null) {
+        incomeData['id'] = DateTime.now().millisecondsSinceEpoch.toString();
+      }
+      final List<Map<String, dynamic>> existingIncomes = await db.query(
+        'incomes',
+        where: 'id = ?',
+        whereArgs: [incomeData['id']],
+      );
+
+      if (existingIncomes.isNotEmpty) {
+        await db.update(
           'incomes',
-          income,
+          incomeData,
+          where: 'id = ?',
+          whereArgs: [incomeData['id']],
+        );
+      } else {
+        await db.insert(
+          'incomes',
+          incomeData,
           conflictAlgorithm: ConflictAlgorithm.ignore,
         );
-      } catch (e) {
-        print('Error inserting income: $income. Error: $e');
       }
+    } catch (e) {
+      print('Error inserting or updating income: $e');
     }
   }
 

@@ -27,6 +27,8 @@ dependencies:
   http: ^1.2.2
   connectivity_plus: ^6.0.5
   qr_code_scanner: ^1.0.0
+  file_picker: ^5.2.7
+  permission_handler: ^11.1.0
 
 dev_dependencies:
   flutter_test:

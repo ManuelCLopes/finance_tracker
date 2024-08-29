@@ -11,6 +11,7 @@ class BackupScreen extends StatefulWidget {
 
 class _BackupScreenState extends State<BackupScreen> {
   String? _selectedFrequency;
+  final BackupHelper _backupHelper = BackupHelper();
 
   @override
   void initState() {
@@ -35,7 +36,7 @@ class _BackupScreenState extends State<BackupScreen> {
             _selectedFrequency = frequency;
           });
           if (frequency != null) {
-            await BackupHelper.scheduleBackup(context: context, frequency: frequency);
+            await BackupHelper.scheduleBackupTask(context: context, frequency: frequency);
           }
         },
         onUnschedule: () async {
@@ -57,26 +58,10 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  Future<void> _exportToCsv() async {
-    final filePath = await BackupHelper.exportToCsv();
-    if (filePath != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${AppLocalizations.of(context)?.translate('backup_saved_csv')} $filePath')),
-      );
-    }
-  }
-
   Future<void> _importFromJson() async {
-    await BackupHelper.importFromJson();
+    await _backupHelper.importFromJson(context); // Use instance
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(AppLocalizations.of(context)?.translate('data_restored_json') ?? 'Data restored from JSON')),
-    );
-  }
-
-  Future<void> _importFromCsv() async {
-    await BackupHelper.importFromCsv();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(AppLocalizations.of(context)?.translate('data_restored_csv') ?? 'Data restored from CSV')),
     );
   }
 
@@ -104,9 +89,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 mainAxisSpacing: 16.0,
                 children: [
                   _buildSquareButton(AppLocalizations.of(context)?.translate('export_to_json') ?? 'Export to JSON', Icons.file_copy, _exportToJson),
-                  _buildSquareButton(AppLocalizations.of(context)?.translate('export_to_csv') ?? 'Export to CSV', Icons.table_chart, _exportToCsv),
                   _buildSquareButton(AppLocalizations.of(context)?.translate('import_json') ?? 'Import JSON', Icons.file_download, _importFromJson),
-                  _buildSquareButton(AppLocalizations.of(context)?.translate('import_csv') ?? 'Import CSV', Icons.file_upload, _importFromCsv),
                   _buildSquareButton(AppLocalizations.of(context)?.translate('backup_scheduling') ?? 'Backup \nScheduling', Icons.schedule, _openFrequencySelector),
                 ],
               ),

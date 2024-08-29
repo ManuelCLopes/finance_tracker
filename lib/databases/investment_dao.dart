@@ -59,24 +59,10 @@ class InvestmentDao {
     });
   }
 
-  Future<void> bulkInsertInvestments(List<Map<String, dynamic>> investments, Transaction txn) async {
-    for (var investment in investments) {
-      try {
-        await txn.insert(
-          'investments',
-          investment,
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
-      } catch (e) {
-        print('Error inserting investment: $investment. Error: $e');
-      }
-    }
-  }
-
   // Method to ensure the 'investmentType' column exists
   Future<void> _ensureSchemaUpdate(Database db) async {
     await db.execute(
-      'ALTER TABLE investments ADD COLUMN investmentType TEXT',
+      'ALTER TABLE investments ADD COLUMN investment_type TEXT',
     ).catchError((e) {
       if (e is DatabaseException && e.isDuplicateColumnError()) {
         // Column already exists, ignore the error
@@ -84,5 +70,39 @@ class InvestmentDao {
         throw e;
       }
     });
+  }
+
+  // Insert or Update Investment
+  Future<void> insertOrUpdateTransaction(Map<String, dynamic> investmentData, Database db) async {
+    try {
+      if (investmentData['id'] == null) {
+        investmentData['id'] = DateTime.now().millisecondsSinceEpoch.toString();
+      }
+      // Check if the investment exists by ID
+      final List<Map<String, dynamic>> existingInvestments = await db.query(
+        'investments',
+        where: 'id = ?',
+        whereArgs: [investmentData['id']],
+      );
+
+      if (existingInvestments.isNotEmpty) {
+        // Investment exists, update it
+        await db.update(
+          'investments',
+          investmentData,
+          where: 'id = ?',
+          whereArgs: [investmentData['id']],
+        );
+      } else {
+        // Investment does not exist, insert it
+        await db.insert(
+          'investments',
+          investmentData,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    } catch (e) {
+      print('Error inserting or updating investment: $e');
+    }
   }
 }

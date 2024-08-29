@@ -66,16 +66,16 @@ class Investment {
 
   static Investment fromMap(Map<String, dynamic> map) {
     return Investment(
-      id: map['id'],
-      symbol: map['symbol'],
-      investmentType: map['investment_type'],
-      initialValue: map['initial_value'],
-      currentValue: map['current_value'],
-      dateInvested: map['date_invested'],
-      investmentProduct: map['investment_product'],
-      quantity: map['quantity'],
-      annualReturn: map['annual_return'],
-      duration: map['duration']
+      id: map['id'] ?? '',
+      symbol: map['symbol'] ?? '',
+      investmentType: map['investment_type'] ?? '',
+      initialValue: map['initial_value'] ?? 0.0,
+      currentValue: map['current_value'] ?? 0.0,
+      dateInvested: map['date_invested'] ?? '',
+      investmentProduct: map['investment_product'] ?? '',
+      quantity: map['quantity'] ?? 0.0,
+      annualReturn: map['annual_return'] ?? 0.0,
+      duration: map['duration'] ?? ''
     );
   }
 }

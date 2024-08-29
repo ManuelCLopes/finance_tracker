@@ -28,12 +28,12 @@ class Income {
 
   static Income fromMap(Map<String, dynamic> map) {
     return Income(
-      id: map['id'],
-      userId: map['user_id'],
-      categoryId: map['category_id'],
-      amount: map['amount'],
-      taxAmount: map['tax_amount'],
-      dateReceived: map['date_received'],
+      id: map['id'] ?? '',
+      userId: map['user_id'] ?? '',
+      categoryId: map['category_id'] ?? '',
+      amount: map['amount'] ?? 0,
+      taxAmount: map['tax_amount'] ?? 0.0,
+      dateReceived: map['date_received'] ?? '',
     );
   }
 }

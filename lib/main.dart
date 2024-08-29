@@ -8,28 +8,34 @@ import 'utils/theme.dart';
 import 'screens/home_screen.dart';
 import 'utils/theme_provider.dart';
 import 'services/localization_service.dart';
-import 'services/app_localizations_service.dart';  // Import AppLocalizations
+import 'services/app_localizations_service.dart';
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     switch (task) {
       case 'backupTask':
+        // Directly call the backup method here
         await BackupHelper.scheduledBackup();
         break;
     }
-    return Future.value(true);
+    return Future.value(true);  // Return true to indicate task completion
   });
 }
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  
+  // Initialize WorkManager for background tasks
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,  // Set to true for debugging; false for release builds
+  );
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => LocalizationService()), // Add LocalizationService provider
+        ChangeNotifierProvider(create: (_) => LocalizationService()),
       ],
       child: const MyApp(),
     ),
@@ -46,9 +52,9 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Finance Tracker',
-      locale: localizationService.getCurrentLocale(), // Use the current locale from LocalizationService
+      locale: localizationService.getCurrentLocale(),
       localizationsDelegates: const [
-        AppLocalizations.delegate,  // Include AppLocalizations delegate
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

@@ -25,11 +25,11 @@ class Expense {
 
   static Expense fromMap(Map<String, dynamic> map) {
     return Expense(
-      id: map['id'],
-      userId: map['user_id'],
-      categoryId: map['category_id'],
-      amount: map['amount'],
-      dateSpent: map['date_spent'],
+      id: map['id'] ?? '',
+      userId: map['user_id'] ?? '',
+      categoryId: map['category_id'] ?? '',
+      amount: map['amount'] ?? 0.0,
+      dateSpent: map['date_spent'] ?? '',
     );
   }
 }

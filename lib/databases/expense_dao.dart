@@ -75,18 +75,33 @@ class ExpenseDao {
     });
   }
 
-  Future<void> bulkInsertExpenses(List<Map<String, dynamic>> expenses, Transaction txn) async {
-    for (var expense in expenses) {
-      try {
-        await txn.insert(
-          'expenses',
-          expense,
-          conflictAlgorithm: ConflictAlgorithm.ignore
-        );
-      } catch (e) {
-        print('Error inserting expense: $expense. Error: $e');
+  Future<void> insertOrUpdateTransaction(Map<String, dynamic> expenseData, Database db) async {
+    try {
+      if (expenseData['id'] == null) {
+        expenseData['id'] = DateTime.now().millisecondsSinceEpoch.toString();
       }
+      final List<Map<String, dynamic>> existingExpenses = await db.query(
+        'expenses',
+        where: 'id = ?',
+        whereArgs: [expenseData['id']],
+      );
+
+      if (existingExpenses.isNotEmpty) {
+        await db.update(
+          'expenses',
+          expenseData,
+          where: 'id = ?',
+          whereArgs: [expenseData['id']],
+        );
+      } else {
+        await db.insert(
+          'expenses',
+          expenseData,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    } catch (e) {
+      print('Error inserting or updating expense: $e');
     }
   }
-
 }

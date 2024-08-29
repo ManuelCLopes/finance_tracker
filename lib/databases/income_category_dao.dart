@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import '../models/income_category.dart';
 import '../databases/database_helper.dart';
 
@@ -14,9 +13,9 @@ class IncomeCategoryDao {
     });
   }
 
-  Future<void> insertCategory(IncomeCategory category) async {
+  Future<int> insertCategory(IncomeCategory category) async {
     final db = await _dbHelper.database;
-    await db.insert('income_categories', category.toMap());
+    return await db.insert('income_categories', category.toMap());
   }
 
   Future<void> updateCategory(IncomeCategory category) async {
@@ -36,20 +35,6 @@ class IncomeCategoryDao {
       where: 'id = ?',
       whereArgs: [id],
     );
-  }
-
-  Future<void> bulkInsertCategories(List<Map<String, dynamic>> categories, Transaction txn) async {
-    for (var category in categories) {
-      try {
-        await txn.insert(
-          'income_categories',
-          category,
-          conflictAlgorithm: ConflictAlgorithm.ignore
-        );
-      } catch (e) {
-        print('Error inserting category: $category. Error: $e');
-      }
-    }
   }
 
 }
