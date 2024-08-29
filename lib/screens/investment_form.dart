@@ -161,16 +161,20 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   void _saveInvestment() async {
     if (_formKey.currentState!.validate()) {
+      // Standardize input by replacing commas with points
+      final initialValue = double.tryParse(_initialValueController.text.replaceAll(',', '.')) ?? 0;
+      final annualReturn = double.tryParse(_annualReturnController.text.replaceAll(',', '.'));
+    
       final investment = Investment(
         id: widget.investment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         symbol: _symbolController.text,
         investmentType: _selectedType,
-        initialValue: double.tryParse(_initialValueController.text) ?? 0,
+        initialValue: initialValue,
         currentValue: _currentValue,
         dateInvested: _formatDate(_selectedDate!),
         investmentProduct: _selectedType == 'Cryptocurrency' ? _stockName : (_selectedType == 'Constant Return' ? _investmentProductController.text : _stockName),
         quantity: _stockQuantity,
-        annualReturn: double.tryParse(_annualReturnController.text),
+        annualReturn: annualReturn,
         duration: _selectedDuration,
       );
 
@@ -284,9 +288,19 @@ class _InvestmentFormState extends State<InvestmentForm> {
                       labelText: AppLocalizations.of(context)?.translate('annual_return') ?? 'Annual Return (%)',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: <TextInputFormatter>[
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')), // Allows digits and an optional decimal point or comma
-                      ],                  ),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')), // Allows digits and an optional decimal point or comma
+                    ],
+                    validator: (value) {
+                      // Replace comma with a point to standardize the input
+                      final sanitizedValue = value?.replaceAll(',', '.');
+                      final number = double.tryParse(sanitizedValue!);
+                      if (number == null) {
+                        return AppLocalizations.of(context)?.translate('enter_annual_return') ?? 'Please enter an annual return value';
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedDuration,
@@ -321,7 +335,10 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
                   },
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
+                    // Replace comma with a point to standardize the input
+                    final sanitizedValue = value?.replaceAll(',', '.');
+                    final number = double.tryParse(sanitizedValue!);
+                    if (number == null) {
                       return AppLocalizations.of(context)?.translate('enter_initial_value') ?? 'Please enter an initial value';
                     }
                     return null;
