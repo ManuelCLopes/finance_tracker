@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../databases/investment_dao.dart';
 import '../models/investment.dart';
@@ -282,8 +283,10 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     decoration: InputDecoration(
                       labelText: AppLocalizations.of(context)?.translate('annual_return') ?? 'Annual Return (%)',
                     ),
-                    keyboardType: TextInputType.number,
-                  ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')), // Allows digits and an optional decimal point or comma
+                      ],                  ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedDuration,
@@ -310,7 +313,10 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   decoration: InputDecoration(
                     labelText: AppLocalizations.of(context)?.translate('initial_value') ?? 'Initial Value',
                   ),
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')), // Allows digits and an optional decimal point or comma
+                  ],     
                   onChanged: (value) {
                     _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
                   },
