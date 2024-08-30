@@ -21,14 +21,13 @@ import '../services/app_localizations_service.dart';
 class BackupHelper {
   
   static Duration _getIntervalFromFrequency(BuildContext context, String frequency) {
-    final localizations = AppLocalizations.of(context);  // Get the localization instance
+    final localizations = AppLocalizations.of(context);
 
     // Fetch localized strings
     String daily = localizations?.translate('daily') ?? 'Daily';
     String weekly = localizations?.translate('weekly') ?? 'Weekly';
     String monthly = localizations?.translate('monthly') ?? 'Monthly';
 
-    // Use if-else instead of switch for non-constant expressions
     if (frequency == daily) {
       return const Duration(days: 1);
     } else if (frequency == weekly) {
@@ -59,14 +58,14 @@ class BackupHelper {
 
     // Register a periodic task with WorkManager
     await Workmanager().registerPeriodicTask(
-      'backupTask', // Unique task identifier
-      'backupTask', // Task name
-      frequency: backupInterval, // Correctly use duration derived from frequency
-      initialDelay: const Duration(minutes: 1), // Optional: Initial delay to stagger the start
+      'backupTask',
+      'backupTask',
+      frequency: backupInterval,
+      initialDelay: const Duration(minutes: 1),
       constraints: Constraints(
-        networkType: NetworkType.connected, // Ensure device is connected to the network
-        requiresBatteryNotLow: true,  // Backup only when battery is not low
-        requiresCharging: false,  // Backup does not require charging
+        networkType: NetworkType.connected,
+        requiresBatteryNotLow: true,
+        requiresCharging: false,
       ),
     );
   }
@@ -179,17 +178,17 @@ class BackupHelper {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Confirm Import'),
-          content: const Text('This action will delete all existing data in the database. Do you want to proceed?'),
+          title: Text(AppLocalizations.of(context)!.translate('confirm_import')),
+          content: Text(AppLocalizations.of(context)!.translate('confirm_import_message')),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.translate('cancel')),
               onPressed: () {
                 Navigator.of(context).pop(false); // Return false if user cancels
               },
             ),
             TextButton(
-              child: const Text('Proceed'),
+              child: Text(AppLocalizations.of(context)!.translate('proceed')),
               onPressed: () {
                 Navigator.of(context).pop(true); // Return true if user proceeds
               },
@@ -205,7 +204,6 @@ class BackupHelper {
     try {
       bool proceed = await _showConfirmationDialog(context);
       if (!proceed) {
-        print('Import canceled by user.');
         return; // Exit if user cancels
       }
 
