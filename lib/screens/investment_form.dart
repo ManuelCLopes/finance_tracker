@@ -172,7 +172,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
         initialValue: initialValue,
         currentValue: _currentValue,
         dateInvested: _formatDate(_selectedDate!),
-        investmentProduct: _selectedType == 'Cryptocurrency' ? _stockName : (_selectedType == 'Constant Return' ? _investmentProductController.text : _stockName),
+        investmentProduct: _selectedType == 'Cryptocurrency' ? _stockName : (_selectedType == 'Constant Return' || _selectedType == 'Other' ? _investmentProductController.text : _stockName),
         quantity: _stockQuantity,
         annualReturn: annualReturn,
         duration: _selectedDuration,
@@ -194,8 +194,8 @@ class _InvestmentFormState extends State<InvestmentForm> {
       appBar: AppBar(
         title: Text(
           widget.investment == null
-              ? AppLocalizations.of(context)?.translate('add_investment') ?? 'Add Investment'
-              : AppLocalizations.of(context)?.translate('edit_investment') ?? 'Edit Investment'
+              ? AppLocalizations.of(context)!.translate('add_investment')
+              : AppLocalizations.of(context)!.translate('edit_investment')
         ),
         actions: [
           if (widget.investment != null)
@@ -205,7 +205,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 await _investmentDao.deleteInvestment(widget.investment!.id);
                 Navigator.pop(context);
               },
-              tooltip: AppLocalizations.of(context)?.translate('delete') ?? 'Delete',
+              tooltip: AppLocalizations.of(context)?.translate('delete'),
             ),
         ],
       ),
@@ -220,7 +220,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 TextFormField(
                   controller: _dateController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('date_invested') ?? 'Date Invested',
+                    labelText: AppLocalizations.of(context)!.translate('date_invested'),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.calendar_today),
                       onPressed: () => _selectDate(context),
@@ -247,11 +247,11 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     });
                   },
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('investment_type') ?? 'Investment Type',
+                    labelText: AppLocalizations.of(context)!.translate('investment_type'),
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
+                if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency' ) ...[
                   TextFormField(
                     controller: _symbolController,
                     decoration: InputDecoration(
@@ -273,11 +273,11 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     ),
                   const SizedBox(height: 16),
                 ],
-                if (_selectedType == 'Constant Return') ...[
+                if (_selectedType == 'Constant Return' || _selectedType == 'Other') ...[
                   TextFormField(
                     controller: _investmentProductController,
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.translate('investment_product') ?? 'Investment Product',
+                      labelText: AppLocalizations.of(context)?.translate('investment_product'),
                       hintText: 'e.g., Trade Republic',
                     ),
                   ),
@@ -285,7 +285,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   TextFormField(
                     controller: _annualReturnController,
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.translate('annual_return') ?? 'Annual Return (%)',
+                      labelText: AppLocalizations.of(context)?.translate('annual_return'),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: <TextInputFormatter>[
@@ -296,7 +296,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                       final sanitizedValue = value?.replaceAll(',', '.');
                       final number = double.tryParse(sanitizedValue!);
                       if (number == null) {
-                        return AppLocalizations.of(context)?.translate('enter_annual_return') ?? 'Please enter an annual return value';
+                        return AppLocalizations.of(context)?.translate('enter_annual_return');
                       }
                       return null;
                     },
@@ -316,7 +316,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                       });
                     },
                     decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.translate('duration') ?? 'Duration',
+                      labelText: AppLocalizations.of(context)?.translate('duration'),
                       hintText: 'Select duration',
                     ),
                   ),
@@ -325,7 +325,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 TextFormField(
                   controller: _initialValueController,
                   decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)?.translate('initial_value') ?? 'Initial Value',
+                    labelText: AppLocalizations.of(context)?.translate('initial_value'),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: <TextInputFormatter>[
@@ -339,7 +339,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     final sanitizedValue = value?.replaceAll(',', '.');
                     final number = double.tryParse(sanitizedValue!);
                     if (number == null) {
-                      return AppLocalizations.of(context)?.translate('enter_initial_value') ?? 'Please enter an initial value';
+                      return AppLocalizations.of(context)?.translate('enter_initial_value');
                     }
                     return null;
                   },
@@ -349,8 +349,8 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
-                      '${_selectedType == 'Cryptocurrency' ? AppLocalizations.of(context)?.translate('crypto_quantity') ?? 'Crypto Quantity' : 
-                      AppLocalizations.of(context)?.translate('stock_quantity') ?? 'Stock/ETF Quantity'}: ${_stockQuantity.toStringAsFixed(4)}',
+                      '${_selectedType == 'Cryptocurrency' ? AppLocalizations.of(context)?.translate('crypto_quantity'): 
+                      AppLocalizations.of(context)?.translate('stock_quantity')}: ${_stockQuantity.toStringAsFixed(4)}',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
@@ -358,14 +358,14 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
-                      '${AppLocalizations.of(context)?.translate('current_value') ?? 'Current Value'}: ${_currentValue?.toStringAsFixed(2)} $_currencySymbol',
+                      '${AppLocalizations.of(context)?.translate('current_value')}: ${_currentValue?.toStringAsFixed(2)} $_currencySymbol',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _saveInvestment,
-                  child: Text(AppLocalizations.of(context)?.translate('save_investment') ?? 'Save Investment'),
+                  child: Text(AppLocalizations.of(context)!.translate('save_investment')),
                 ),
               ],
             ),

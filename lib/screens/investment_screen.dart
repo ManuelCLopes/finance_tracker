@@ -86,7 +86,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         } else {
           updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
         }
-      } else if (investment.investmentType == 'Constant Return') {
+      } else if (investment.investmentType == 'Constant Return' || investment.investmentType == 'Other' ) {
         final currentValue = _calculateConstantReturnCurrentValue(investment);
         updatedTotalCurrentValue += currentValue;
 
@@ -117,7 +117,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     final durationMonths = _getDurationInMonths(investment.duration ?? '-');
     final endDate = initialDate.add(Duration(days: 30 * durationMonths));
 
-    if (currentDate.isAfter(endDate)) {
+    if (currentDate.isAfter(endDate) && durationMonths != 0) {
       // If the current date is after the investment period, cap the value at the duration end
       final yearsPassed = durationMonths / 12;
       return investment.initialValue * (1 + (investment.annualReturn! / 100) * yearsPassed);
@@ -171,7 +171,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     final localizations = AppLocalizations.of(context);
 
     return AppScaffold(
-      title: localizations?.translate('investments') ?? 'Investments',
+      title: localizations!.translate('investments'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _investments.isEmpty 
@@ -214,7 +214,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           children: [
             // Label Text
             Text(
-              localizations?.translate('total_invested') ?? 'Total Invested',
+              localizations!.translate('total_invested'),
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             // Value and Percentage Column
@@ -295,7 +295,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            investment.investmentProduct ?? localizations?.translate('unknown_product') ?? 'Unknown Product', // Show investment product name
+                            investment.investmentProduct ?? localizations!.translate('unknown_product'),
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ),
@@ -305,7 +305,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                             Text(
                               investment.currentValue != null
                                   ? '${investment.currentValue!.toStringAsFixed(2)} $_currencySymbol'
-                                  : localizations?.translate('not_available') ?? 'N/A',
+                                  : localizations!.translate('not_available'),
                               style: TextStyle(
                                 color: Theme.of(context).primaryColor,
                                 fontWeight: FontWeight.bold,
