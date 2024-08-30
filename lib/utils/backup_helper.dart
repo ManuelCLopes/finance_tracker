@@ -302,8 +302,16 @@ class BackupHelper {
     if (category.isNotEmpty) {
       item['category_id'] = category.first['id'];
     } else {
-      int newCategoryId = await dao.insertCategory({'name': categoryName}, db);
-      item['category_id'] = newCategoryId;
+      if (dao is IncomeDao) {
+        IncomeCategoryDao incomeCategoryDao = IncomeCategoryDao();
+        IncomeCategory categoryToAdd = IncomeCategory(name: categoryName as String);
+        item['category_id'] = await incomeCategoryDao.insertCategory(categoryToAdd);
+      }
+      else {
+        ExpenseCategoryDao expenseCategoryDao = ExpenseCategoryDao();
+        ExpenseCategory categoryToAdd = ExpenseCategory(name: categoryName as String);
+        item['category_id'] = await expenseCategoryDao.insertCategory(categoryToAdd);
+      }
     }
     item.remove('category_name');
 
