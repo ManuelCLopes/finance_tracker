@@ -29,9 +29,11 @@ class _IncomeScreenState extends State<IncomeScreen> {
   double _totalMonthIncome = 0.0;
   String _monthLabel = ''; // Label for the card, default is empty
   String _currencySymbol = '\$'; // Default currency symbol
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   int _currentMonth = DateTime.now().month; // Track the current displayed month
   int _currentYear = DateTime.now().year;
+  Map<String, double> _monthlyTotals = {};
+
 
   @override
   void didChangeDependencies() {
@@ -44,54 +46,77 @@ class _IncomeScreenState extends State<IncomeScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true; // Show loading indicator during data fetch
-    });
+  setState(() {
+    _isLoading = true; // Show loading indicator during data fetch
+  });
 
-    // Load categories and incomes
-    List<IncomeCategory> categories = await _incomeCategoryDao.getAllCategories();
-    List<Income> incomes = await _incomeDao.getAllIncomes();
+  // Load categories and incomes
+  List<IncomeCategory> categories = await _incomeCategoryDao.getAllCategories();
+  List<Income> incomes = await _incomeDao.getAllIncomes();
 
-    // Map category IDs to their names
-    _categoryMap = {for (var category in categories) category.id!: category.name};
+  _categoryMap = {for (var category in categories) category.id!: category.name};
+  _currencySymbol = await CurrencyUtils.getCurrencySymbol();
+  _monthlyTotals = {};
 
-    // Load the currency symbol
-    _currencySymbol = await CurrencyUtils.getCurrencySymbol();
+  // Sort incomes by date to find the last income
+  incomes.sort((a, b) => DateTime.parse(b.dateReceived).compareTo(DateTime.parse(a.dateReceived)));
 
-    // Calculate the initial values for the card based on the first income in the list
-    if (incomes.isNotEmpty) {
-      _currentMonth = DateTime.now().month;
-      _currentYear = DateTime.now().year;
-      _updateMonthLabel(_currentMonth, _currentYear, incomes);
+  if (incomes.isNotEmpty) {
+    // Set the current month and year to the last income's month and year
+    DateTime lastIncomeDate = DateTime.parse(incomes.first.dateReceived);
+    _currentMonth = lastIncomeDate.month;
+    _currentYear = lastIncomeDate.year;
+
+    // Update the month label based on the last income date
+    _monthLabel = DateFormat('MMMM yyyy').format(lastIncomeDate);
+
+    // Calculate monthly totals
+    for (var income in incomes) {
+      DateTime incomeDate = DateTime.parse(income.dateReceived);
+      String monthKey = '${incomeDate.year}-${incomeDate.month}';
+
+      if (_monthlyTotals.containsKey(monthKey)) {
+        _monthlyTotals[monthKey] = _monthlyTotals[monthKey]! + income.amount;
+      } else {
+        _monthlyTotals[monthKey] = income.amount;
+      }
     }
 
-    setState(() {
-      _incomes = incomes;
-      _hasData = incomes.isNotEmpty;
-      _isLoading = false; // Data loading is complete
-    });
+    // Set the total income for the last income's month
+    String currentMonthKey = '$_currentYear-$_currentMonth';
+    _totalMonthIncome = _monthlyTotals[currentMonthKey] ?? 0.0;
+  } else {
+    // If no incomes, default to current month and year
+    DateTime now = DateTime.now();
+    _currentMonth = now.month;
+    _currentYear = now.year;
+    _monthLabel = DateFormat('MMMM yyyy').format(now); // Default to current date's month and year
+    _totalMonthIncome = 0.0;
   }
+
+  setState(() {
+    _incomes = incomes;
+    _hasData = incomes.isNotEmpty;
+    _isLoading = false; // Data loading is complete
+  });
+}
 
   void _updateMonthLabel(int month, int year, List<Income> incomes) {
-    DateTime now = DateTime.now();
+    // Use monthKey to retrieve the total income for the specified month and year
+    String monthKey = '$year-$month';
 
-    if (month == now.month && year == now.year) {
-      _monthLabel = AppLocalizations.of(context)?.translate('current_month') ?? 'Current Month';
-    } else {
-      String monthName = DateFormat('MMMM').format(DateTime(year, month));
-      _monthLabel = '$monthName $year';
-    }
-
-    // Calculate total income for that month
-    double totalMonthIncome = incomes.where((income) {
-      DateTime incomeDate = DateTime.parse(income.dateReceived);
-      return incomeDate.month == month && incomeDate.year == year;
-    }).fold(0.0, (sum, income) => sum + income.amount);
+    // Retrieve the total from monthlyTotals
+    double totalMonthIncome = _monthlyTotals[monthKey] ?? 0.0;
 
     setState(() {
+      _currentMonth = month;
+      _currentYear = year;
       _totalMonthIncome = totalMonthIncome;
+      _monthLabel = DateFormat('MMMM yyyy').format(DateTime(year, month)); // Update label to display month and year
     });
   }
+
+
 
   void _onScrollUpdate() {
     if (_scrollController.hasClients) {
@@ -181,7 +206,7 @@ class _IncomeScreenState extends State<IncomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      _monthLabel, // Adjusted label based on first visible income
+                      _monthLabel, // Display month and year of the last income
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     Text(

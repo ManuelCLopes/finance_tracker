@@ -31,6 +31,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   int _currentMonth = DateTime.now().month;
   int _currentYear = DateTime.now().year;
   Map<int, String> _categoryMap = {};  // Map with int keys and String values
+  Map<String, double> _monthlyTotals = {};
 
   final ScrollController _scrollController = ScrollController();
 
@@ -48,38 +49,49 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
   }
 
   Future<void> _loadData() async {
+    // Fetch expenses and categories from the database
     List<Expense> expenses = await _expenseDao.getAllExpenses();
     List<ExpenseCategory> categories = await _expenseCategoryDao.getAllCategories();
 
-    double totalCurrentMonthExpenses = 0.0;
-    Map<String, double> monthlyTotals = {};
+    _monthlyTotals = {};
 
     // Load the currency symbol
     _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
-    DateTime now = DateTime.now();
-    int currentMonth = now.month;
-    int currentYear = now.year;
+    if (expenses.isNotEmpty) {
+      // Sort expenses by date to find the last expense
+      expenses.sort((a, b) => DateTime.parse(b.dateSpent).compareTo(DateTime.parse(a.dateSpent)));
 
+      // Set the current month and year to the last expense's month and year
+      DateTime lastExpenseDate = DateTime.parse(expenses.first.dateSpent);
+      _currentMonth = lastExpenseDate.month;
+      _currentYear = lastExpenseDate.year;
+    } else {
+      // If no expenses, default to current month and year
+      DateTime now = DateTime.now();
+      _currentMonth = now.month;
+      _currentYear = now.year;
+    }
+
+    // Calculate monthly totals
     for (var expense in expenses) {
       DateTime expenseDate = DateTime.parse(expense.dateSpent);
       String monthKey = '${expenseDate.year}-${expenseDate.month}';
 
-      if (expenseDate.month == currentMonth && expenseDate.year == currentYear) {
-        totalCurrentMonthExpenses += expense.amount;
-      }
-
-      if (monthlyTotals.containsKey(monthKey)) {
-        monthlyTotals[monthKey] = monthlyTotals[monthKey]! + expense.amount;
+      if (_monthlyTotals.containsKey(monthKey)) {
+        _monthlyTotals[monthKey] = _monthlyTotals[monthKey]! + expense.amount;
       } else {
-        monthlyTotals[monthKey] = expense.amount;
+        _monthlyTotals[monthKey] = expense.amount;
       }
     }
+
+    // Set the visible month total to the total for the last expense's month
+    String currentMonthKey = '$_currentYear-$_currentMonth';
+    _visibleMonthTotal = _monthlyTotals[currentMonthKey] ?? 0.0;
 
     setState(() {
       _expenses = expenses;
       _hasData = expenses.isNotEmpty;
-      _visibleMonthTotal = totalCurrentMonthExpenses;
       _categoryMap = {for (var category in categories) category.id!: category.name};
     });
   }
@@ -93,13 +105,13 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       DateFormat('MMMM').format(DateTime(year, month));
     }
 
-    // Calculate total income for that month
-    expenses.where((expense) {
-      DateTime expenseDate = DateTime.parse(expense.dateSpent);
-      return expenseDate.month == month && expenseDate.year == year;
-    }).fold(0.0, (sum, expense) => sum + expense.amount);
+    String monthKey = '$year-$month';
+    _visibleMonthTotal = _monthlyTotals[monthKey] ?? 0.0;
 
-    setState(() {});
+    setState(() {
+      _currentMonth = month;
+      _currentYear = year;
+      });
   }
 
   void _onScrollUpdate() {
@@ -175,10 +187,9 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Display the month and year of the last expense
                   Text(
-                    _currentMonth == DateTime.now().month && _currentYear == DateTime.now().year
-                        ? AppLocalizations.of(context)?.translate('current_month') ?? 'Current Month'
-                        : DateFormat('MMMM yyyy').format(DateTime(_currentYear, _currentMonth)),
+                    DateFormat('MMMM yyyy').format(DateTime(_currentYear, _currentMonth)),
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   Text(
