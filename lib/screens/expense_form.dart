@@ -130,6 +130,46 @@ class _ExpenseFormState extends State<ExpenseForm> {
     }
   }
 
+  void _addCategory() async {
+    // Implement category addition logic here
+    TextEditingController categoryNameController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)?.translate('add_category') ?? 'Add Category'),
+          content: TextField(
+            controller: categoryNameController,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)?.translate('category_name') ?? 'Category Name',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                String newCategoryName = categoryNameController.text.trim();
+                if (newCategoryName.isNotEmpty) {
+                  // Save new category to the database
+                  await _expenseCategoryDao.insertCategory(ExpenseCategory(name: newCategoryName));
+                  await _loadCategories();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(AppLocalizations.of(context)?.translate('add') ?? 'Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,32 +190,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Align left for better readability
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DropdownButtonFormField<String>(
-                value: _selectedCategory.isNotEmpty ? _selectedCategory : null,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)?.translate('category') ?? 'Category',
-                  contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
-                ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category.id.toString(),
-                    child: Text(category.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocalizations.of(context)?.translate('please_select_category') ?? 'Please select a category';
-                  }
-                  return null;
-                },
-              ),
+              _buildCategoryDropdown(context),
               const SizedBox(height: 16), // Space between fields
               TextFormField(
                 controller: _amountController,
@@ -206,7 +223,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
                 onTap: () => _selectDate(context),
               ),
               const SizedBox(height: 24), // Additional space before the button
-              Center( // Center the button
+              Center(
                 child: ElevatedButton(
                   onPressed: _saveExpense,
                   child: Text(AppLocalizations.of(context)?.translate('save_expense') ?? 'Save Expense'),
@@ -215,6 +232,65 @@ class _ExpenseFormState extends State<ExpenseForm> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButtonFormField<String>(
+                value: _selectedCategory.isNotEmpty ? _selectedCategory : null,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)?.translate('category') ?? 'Category',
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category.id.toString(),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 8),
+                        Text(category.name),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value!;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppLocalizations.of(context)?.translate('please_select_category') ?? 'Please select a category';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: _addCategory,
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              backgroundColor: Theme.of(context).primaryColor,
+              padding: const EdgeInsets.all(12),
+            ),
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }

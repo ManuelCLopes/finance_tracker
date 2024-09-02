@@ -5,7 +5,7 @@ import '../databases/income_dao.dart';
 import '../models/income.dart';
 import '../models/income_category.dart';
 
-import '../services/app_localizations_service.dart'; // Import the localization package
+import '../services/app_localizations_service.dart'; 
 
 class IncomeForm extends StatefulWidget {
   final Income? income;
@@ -132,6 +132,48 @@ class _IncomeFormState extends State<IncomeForm> {
     }
   }
 
+  void _addCategory() async {
+    // Function to show a dialog or navigate to add a new category
+    // Here is a simple dialog example:
+
+    TextEditingController categoryNameController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)?.translate('add_category') ?? 'Add Category'),
+          content: TextField(
+            controller: categoryNameController,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)?.translate('category_name') ?? 'Category Name',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); 
+              },
+              child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                String newCategoryName = categoryNameController.text.trim();
+                if (newCategoryName.isNotEmpty) {
+                  // Save new category to the database
+                  await _incomeCategoryDao.insertCategory(IncomeCategory(name: newCategoryName));
+                  await _loadCategories();
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(AppLocalizations.of(context)?.translate('add') ?? 'Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,27 +195,7 @@ class _IncomeFormState extends State<IncomeForm> {
           key: _formKey,
           child: Column(
             children: [
-              DropdownButtonFormField<String>(
-                value: _selectedCategory.isNotEmpty ? _selectedCategory : null,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)?.translate('category') ?? 'Category'),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category.id.toString(),
-                    child: Text(category.name),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return AppLocalizations.of(context)?.translate('please_select_category') ?? 'Please select a category';
-                  }
-                  return null;
-                },
-              ),
+              _buildCategoryDropdown(context),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _amountController,
@@ -222,4 +244,66 @@ class _IncomeFormState extends State<IncomeForm> {
       ),
     );
   }
+
+  Widget _buildCategoryDropdown(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          // The dropdown field first to avoid confusion.
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButtonFormField<String>(
+                value: _selectedCategory.isNotEmpty ? _selectedCategory : null,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)?.translate('category') ?? 'Category',
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category.id.toString(),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 8),
+                        Text(category.name),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value!;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return AppLocalizations.of(context)?.translate('please_select_category') ?? 'Please select a category';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: _addCategory,
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              backgroundColor: Theme.of(context).primaryColor,
+              padding: const EdgeInsets.all(12),
+            ),
+            child: const Icon(
+              Icons.add,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 }
