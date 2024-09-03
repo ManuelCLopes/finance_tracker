@@ -292,12 +292,10 @@ class _IncomeFormState extends State<IncomeForm> {
             onPressed: _addCategory,
             style: ElevatedButton.styleFrom(
               shape: const CircleBorder(),
-              backgroundColor: Theme.of(context).primaryColor,
               padding: const EdgeInsets.all(12),
             ),
             child: const Icon(
               Icons.add,
-              color: Colors.white,
             ),
           ),
         ],
