@@ -209,7 +209,8 @@ class _OverviewScreenState extends State<OverviewScreen> {
     return ThemedPieChart(
       incomeValue: _totalIncome,
       expenseValue: _totalExpenses,
-      investedValue: _totalInvestments,
+      investedValue: _totalInvestments, 
+      currencySymbol: _currencySymbol,
     );
   }
 
