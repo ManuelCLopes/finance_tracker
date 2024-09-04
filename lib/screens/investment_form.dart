@@ -36,8 +36,8 @@ class _InvestmentFormState extends State<InvestmentForm> {
   late TextEditingController _dateController;
   late TextEditingController _annualReturnController;
   late TextEditingController _investmentProductController;
+  late TextEditingController _quantityController; // Controller for Quantity
   String _selectedDuration = '-';
-  late double _stockQuantity;
   late String _stockName;
   DateTime? _selectedDate;
   double? _currentValue;
@@ -51,10 +51,10 @@ class _InvestmentFormState extends State<InvestmentForm> {
     _initialValueController = TextEditingController(text: widget.investment?.initialValue.toString() ?? '');
     _annualReturnController = TextEditingController(text: widget.investment?.annualReturn?.toString() ?? '');
     _investmentProductController = TextEditingController(text: widget.investment?.investmentProduct ?? '');
+    _quantityController = TextEditingController(text: widget.investment?.quantity.toString() ?? '0'); // Initialize Quantity Controller
     _selectedDuration = widget.investment?.duration ?? _durations.first;
     _selectedDate = widget.investment != null ? DateTime.parse(widget.investment!.dateInvested) : DateTime.now();
     _dateController = TextEditingController(text: _formatDate(_selectedDate!));
-    _stockQuantity = widget.investment?.quantity ?? 0.0;
     _stockName = widget.investment?.investmentProduct ?? '';
     _currentValue = widget.investment?.currentValue;
 
@@ -73,6 +73,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
     _annualReturnController.dispose();
     _dateController.dispose();
     _investmentProductController.dispose();
+    _quantityController.dispose(); // Dispose Quantity Controller
     super.dispose();
   }
 
@@ -105,9 +106,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
           setState(() {
             _stockName = cryptoDetails['name'] ?? 'Cryptocurrency Not Found';
             if (cryptoDetails['current_price']?.toDouble() != null) {
-              final initialValue = double.tryParse(_initialValueController.text) ?? 0.0;
-              _currentValue = initialValue;
-              _stockQuantity = initialValue / cryptoDetails['current_price']?.toDouble();
+              final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+              _currentValue = quantity * cryptoDetails['current_price'].toDouble();
+              _initialValueController.text = _currentValue?.toStringAsFixed(2) ?? '';
             }
           });
         } else {
@@ -139,9 +140,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
     }
   }
 
-  Future<void> _calculateStockQuantity() async {
-    final initialValue = double.tryParse(_initialValueController.text) ?? 0.0;
-    if (initialValue > 0 && _symbolController.text.isNotEmpty) {
+  Future<void> _calculateInitialValue() async {
+    final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+    if (quantity > 0 && _symbolController.text.isNotEmpty) {
       if (_selectedType == 'Stocks' || _selectedType == 'ETFs') {
         final stockPrice = await FinnhubService.getHistoricalData(
           _symbolController.text,
@@ -149,8 +150,8 @@ class _InvestmentFormState extends State<InvestmentForm> {
         );
         if (stockPrice != null) {
           setState(() {
-            _stockQuantity = initialValue / stockPrice;
-            _currentValue = _stockQuantity * stockPrice;
+            _currentValue = quantity * stockPrice;
+            _initialValueController.text = (_currentValue ?? 0).toStringAsFixed(2);
           });
         }
       } else if (_selectedType == 'Cryptocurrency') {
@@ -161,9 +162,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
 
   void _saveInvestment() async {
     if (_formKey.currentState!.validate()) {
-      // Standardize input by replacing commas with points
       final initialValue = double.tryParse(_initialValueController.text.replaceAll(',', '.')) ?? 0;
       final annualReturn = double.tryParse(_annualReturnController.text.replaceAll(',', '.'));
+      final quantity = double.tryParse(_quantityController.text) ?? 0.0;
     
       final investment = Investment(
         id: widget.investment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -173,7 +174,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
         currentValue: _currentValue,
         dateInvested: _formatDate(_selectedDate!),
         investmentProduct: _selectedType == 'Cryptocurrency' ? _stockName : (_selectedType == 'Constant Return' || _selectedType == 'Other' ? _investmentProductController.text : _stockName),
-        quantity: _stockQuantity,
+        quantity: quantity,
         annualReturn: annualReturn,
         duration: _selectedDuration,
       );
@@ -211,11 +212,11 @@ class _InvestmentFormState extends State<InvestmentForm> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(  // Added SingleChildScrollView
+        child: SingleChildScrollView(
           child: Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,  // Added to align widgets to the start
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextFormField(
                   controller: _dateController,
@@ -242,7 +243,6 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     setState(() {
                       _selectedType = value!;
                       _stockName = '';
-                      _stockQuantity = 0.0;
                       _currentValue = null;
                     });
                   },
@@ -251,14 +251,14 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency' ) ...[
+                if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency') ...[
                   TextFormField(
                     controller: _symbolController,
                     decoration: InputDecoration(
                       labelText: AppLocalizations.of(context)?.translate('symbol') ?? 'Symbol',
                     ),
                     onChanged: (value) {
-                      _fetchFinancialData(); // Fetch data for both stock/ETF and cryptocurrency
+                      _fetchFinancialData();
                     },
                   ),
                   if (_stockName.isNotEmpty)
@@ -289,10 +289,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')), // Allows digits and an optional decimal point or comma
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
                     ],
                     validator: (value) {
-                      // Replace comma with a point to standardize the input
                       final sanitizedValue = value?.replaceAll(',', '.');
                       final number = double.tryParse(sanitizedValue!);
                       if (number == null) {
@@ -329,13 +328,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')), // Allows digits and an optional decimal point or comma
-                  ],     
-                  onChanged: (value) {
-                    _calculateStockQuantity(); // Fetch and calculate stock or crypto quantity
-                  },
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
+                  ],
                   validator: (value) {
-                    // Replace comma with a point to standardize the input
                     final sanitizedValue = value?.replaceAll(',', '.');
                     final number = double.tryParse(sanitizedValue!);
                     if (number == null) {
@@ -346,13 +341,18 @@ class _InvestmentFormState extends State<InvestmentForm> {
                 ),
                 const SizedBox(height: 16),
                 if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      '${_selectedType == 'Cryptocurrency' ? AppLocalizations.of(context)?.translate('crypto_quantity'): 
-                      AppLocalizations.of(context)?.translate('stock_quantity')}: ${_stockQuantity.toStringAsFixed(4)}',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                  TextFormField(
+                    controller: _quantityController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('quantity'),
                     ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
+                    ],
+                    onChanged: (value) {
+                      _calculateInitialValue(); // Update initial value based on quantity
+                    },
                   ),
                 if (_currentValue != null)
                   Padding(
