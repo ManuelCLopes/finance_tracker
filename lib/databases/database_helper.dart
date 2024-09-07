@@ -111,7 +111,7 @@ class DatabaseHelper {
     SELECT 
       --expenses.id, 
       expense_categories.name AS category,
-      expenses.amount, 
+      ROUND(expenses.amount, 2) as amount, 
       expenses.date_spent 
     FROM expenses
     JOIN expense_categories ON expenses.category_id = expense_categories.id
@@ -124,7 +124,7 @@ Future<List<Map<String, dynamic>>> getAllIncomes() async {
     SELECT 
       --incomes.id, 
       income_categories.name AS category,
-      incomes.amount, 
+      ROUND(incomes.amount, 2) as amount, 
       incomes.date_received, 
       incomes.tax_amount 
     FROM incomes
@@ -140,8 +140,8 @@ Future<List<Map<String, dynamic>>> getAllInvestments() async {
       investments.symbol,
       investments.investment_type, 
       investments.date_invested,
-      investments.initial_value, 
-      investments.current_value, 
+      ROUND(investments.initial_value, 2) AS initial_value, 
+      ROUND(investments.current_value, 2) AS current_value,
       investments.investment_product
     FROM investments
   ''');

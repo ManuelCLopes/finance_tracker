@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
 import 'screens/settings_screen.dart';
@@ -22,9 +23,9 @@ void callbackDispatcher() {
   });
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+  await MobileAds.instance.initialize();
   // Initialize WorkManager for background tasks
   Workmanager().initialize(
     callbackDispatcher,
