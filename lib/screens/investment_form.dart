@@ -106,9 +106,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
           setState(() {
             _stockName = cryptoDetails['name'] ?? 'Cryptocurrency Not Found';
             if (cryptoDetails['current_price']?.toDouble() != null) {
-              final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+              final quantity = double.tryParse(_quantityController.text.replaceAll(',', '.')) ?? 0.0;
               _currentValue = quantity * cryptoDetails['current_price'].toDouble();
-              _initialValueController.text = _currentValue?.toStringAsFixed(2) ?? '';
+              _quantityController.text = quantity.toStringAsFixed(5);
             }
           });
         } else {
@@ -140,31 +140,12 @@ class _InvestmentFormState extends State<InvestmentForm> {
     }
   }
 
-  Future<void> _calculateInitialValue() async {
-    final quantity = double.tryParse(_quantityController.text) ?? 0.0;
-    if (quantity > 0 && _symbolController.text.isNotEmpty) {
-      if (_selectedType == 'Stocks' || _selectedType == 'ETFs') {
-        final stockPrice = await FinnhubService.getHistoricalData(
-          _symbolController.text,
-          _dateController.text,
-        );
-        if (stockPrice != null) {
-          setState(() {
-            _currentValue = quantity * stockPrice;
-            _initialValueController.text = (_currentValue ?? 0).toStringAsFixed(2);
-          });
-        }
-      } else if (_selectedType == 'Cryptocurrency') {
-        await _fetchFinancialData(); // Fetch crypto data if the selected type is Cryptocurrency
-      }
-    }
-  }
-
   void _saveInvestment() async {
     if (_formKey.currentState!.validate()) {
       final initialValue = double.tryParse(_initialValueController.text.replaceAll(',', '.')) ?? 0;
       final annualReturn = double.tryParse(_annualReturnController.text.replaceAll(',', '.'));
-      final quantity = double.tryParse(_quantityController.text) ?? 0.0;
+      final quantity = double.tryParse(_quantityController.text.replaceAll(',', '.')) ?? 0.0;
+      final roundedQuantity = double.parse(quantity.toStringAsFixed(5));
     
       final investment = Investment(
         id: widget.investment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -174,7 +155,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
         currentValue: _currentValue,
         dateInvested: _formatDate(_selectedDate!),
         investmentProduct: _selectedType == 'Cryptocurrency' ? _stockName : (_selectedType == 'Constant Return' || _selectedType == 'Other' ? _investmentProductController.text : _stockName),
-        quantity: quantity,
+        quantity: roundedQuantity,
         annualReturn: annualReturn,
         duration: _selectedDuration,
       );
@@ -273,54 +254,6 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     ),
                   const SizedBox(height: 16),
                 ],
-                if (_selectedType == 'Constant Return' || _selectedType == 'Other') ...[
-                  TextFormField(
-                    controller: _investmentProductController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.translate('investment_product'),
-                      hintText: 'e.g., Trade Republic',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _annualReturnController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.translate('annual_return'),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
-                    ],
-                    validator: (value) {
-                      final sanitizedValue = value?.replaceAll(',', '.');
-                      final number = double.tryParse(sanitizedValue!);
-                      if (number == null) {
-                        return AppLocalizations.of(context)?.translate('enter_annual_return');
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedDuration,
-                    items: _durations.map((String duration) {
-                      return DropdownMenuItem(
-                        value: duration,
-                        child: Text(duration),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDuration = value!;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.translate('duration'),
-                      hintText: 'Select duration',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
                 TextFormField(
                   controller: _initialValueController,
                   decoration: InputDecoration(
@@ -330,6 +263,9 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
                   ],
+                  onChanged: (value) {
+                    _updateQuantityBasedOnInitialValue();
+                  },
                   validator: (value) {
                     final sanitizedValue = value?.replaceAll(',', '.');
                     final number = double.tryParse(sanitizedValue!);
@@ -351,7 +287,7 @@ class _InvestmentFormState extends State<InvestmentForm> {
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
                     ],
                     onChanged: (value) {
-                      _calculateInitialValue(); // Update initial value based on quantity
+                      _updateInitialValueBasedOnQuantity();
                     },
                   ),
                 if (_currentValue != null)
@@ -374,4 +310,53 @@ class _InvestmentFormState extends State<InvestmentForm> {
       ),
     );
   }
+
+  void _updateQuantityBasedOnInitialValue() async {
+    final initialValue = double.tryParse(_initialValueController.text.replaceAll(",", ".")) ?? 0.0;
+    if (initialValue > 0 && _symbolController.text.isNotEmpty) {
+      if (_selectedType == 'Stocks' || _selectedType == 'ETFs') {
+        final stockPrice = await FinnhubService.getRealTimeData(_symbolController.text);
+        if (stockPrice != null) {
+          setState(() {
+            final quantity = initialValue / stockPrice;
+            _quantityController.text = quantity.toString();
+          });
+        }
+      } else if (_selectedType == 'Cryptocurrency') {
+        final cryptoDetails = await CryptoService().getCryptoDetails(_symbolController.text);
+        if (cryptoDetails != null) {
+          final cryptoPrice = cryptoDetails['current_price']?.toDouble() ?? 1.0;
+          setState(() {
+            final quantity = initialValue / cryptoPrice;
+            _quantityController.text = quantity.toString(); 
+          });
+        }
+      }
+    }
+  }
+
+  void _updateInitialValueBasedOnQuantity() async {
+    final quantity = double.tryParse(_quantityController.text.replaceAll(",", ".")) ?? 0.0;
+    if (quantity > 0 && _symbolController.text.isNotEmpty) {
+      if (_selectedType == 'Stocks' || _selectedType == 'ETFs') {
+        final stockPrice = await FinnhubService.getRealTimeData(_symbolController.text);
+        if (stockPrice != null) {
+          setState(() {
+            final initialValue = quantity * stockPrice;
+            _initialValueController.text = initialValue.toStringAsFixed(2);
+          });
+        }
+      } else if (_selectedType == 'Cryptocurrency') {
+        final cryptoDetails = await CryptoService().getCryptoDetails(_symbolController.text);
+        if (cryptoDetails != null) {
+          final cryptoPrice = cryptoDetails['current_price']?.toDouble() ?? 1.0;
+          setState(() {
+            final initialValue = quantity * cryptoPrice;
+            _initialValueController.text = initialValue.toStringAsFixed(2);
+          });
+        }
+      }
+    }
+  }
+  
 }

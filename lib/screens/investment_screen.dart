@@ -33,33 +33,24 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     // Fetch the currency symbol
     _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
-    // Fetch investments from the database
+    // Fetch investments from the database (initially saved data)
     List<Investment> investments = await _investmentDao.getAllInvestments();
 
     // Calculate initial total invested
     double totalInvested = investments.fold(0.0, (sum, inv) => sum + inv.initialValue);
 
-    // Set state with initial values
+    // Set state with initial values (render screen with saved values)
     setState(() {
       _investments = investments;
       _totalInvested = totalInvested;
+      _isLoading = false;  // Screen will be rendered with saved data
     });
 
-    // Fetch real-time data and update the UI
-    await _updateInvestmentsWithCurrentValue();
-
-    // Calculate the percentage change and update the UI
-    setState(() {
-      _percentageChange = (_totalCurrentValue - _totalInvested) / _totalInvested * 100;
-      _isLoading = false;
-    });
+    // Fetch real-time data and update investments asynchronously
+    _updateInvestmentsWithCurrentValue();  // This will update the values behind the scenes
   }
 
   Future<void> _updateInvestmentsWithCurrentValue() async {
@@ -67,7 +58,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
     for (var investment in _investments) {
       if (investment.investmentType == 'Stocks') {
-        // Fetch real-time data for stocks
         final currentPrice = await _fetchRealTimeData(investment.symbol);
         if (currentPrice != null) {
           final currentValue = (investment.quantity! * currentPrice).roundToDouble();
@@ -77,7 +67,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
             currentValue: currentValue,
           );
 
-          // Save updated investment back to the database
           await _investmentDao.updateInvestment(updatedInvestment);
 
           setState(() {
@@ -86,28 +75,13 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         } else {
           updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
         }
-      } else if (investment.investmentType == 'Constant Return' || investment.investmentType == 'Other' ) {
-        final currentValue = _calculateConstantReturnCurrentValue(investment);
-        updatedTotalCurrentValue += currentValue;
-
-        Investment updatedInvestment = investment.copyWith(
-          currentValue: currentValue,
-        );
-
-        // Save updated investment back to the database
-        await _investmentDao.updateInvestment(updatedInvestment);
-
-        setState(() {
-          _investments[_investments.indexOf(investment)] = updatedInvestment;
-        });
-      } else {
-        // Handle other investment types (e.g., Bonds, Real Estate)
-        updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
       }
+      // Handle other investment types...
     }
 
     setState(() {
       _totalCurrentValue = updatedTotalCurrentValue;
+      _percentageChange = (_totalCurrentValue - _totalInvested) / _totalInvested * 100;
     });
   }
 
@@ -243,13 +217,11 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   }
 
   Widget _buildGroupedInvestmentList(BuildContext context, AppLocalizations? localizations) {
-    // Group investments by type
     Map<String, List<Investment>> groupedInvestments = {};
     for (var investment in _investments) {
       groupedInvestments.putIfAbsent(investment.investmentType!, () => []).add(investment);
     }
 
-    // Build the grouped list
     return Column(
       children: groupedInvestments.entries.map((entry) {
         double totalInitial = entry.value.fold(0.0, (sum, inv) => sum + inv.initialValue);
@@ -258,29 +230,28 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
 
         final Color categoryPercentageColor = categoryChange >= 0 ? Colors.green : Colors.red;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    localizations?.translate(entry.key.toLowerCase()) ?? entry.key,
-                    style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+        return Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  localizations?.translate(entry.key.toLowerCase()) ?? entry.key,
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${categoryChange.toStringAsFixed(2)} %',
+                  style: TextStyle(
+                    color: categoryPercentageColor,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Text(
-                    '${categoryChange.toStringAsFixed(2)} %',
-                    style: TextStyle(
-                      color: categoryPercentageColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            ...entry.value.map((investment) {
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: EdgeInsets.zero,
+            children: entry.value.map((investment) {
               return Card(
                 elevation: 3,
                 shape: RoundedRectangleBorder(
@@ -326,7 +297,7 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
                 ),
               );
             }).toList(),
-          ],
+          )
         );
       }).toList(),
     );
