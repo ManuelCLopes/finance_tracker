@@ -96,5 +96,8 @@
   "weekly": "Hebdomadaire",
   "monthly": "Mensuel",
   "unschedule_backup": "Annuler la Sauvegarde",
-  "view_on_web": "Afficher sur le Web"
+  "view_on_web": "Afficher sur le Web",
+  "confirm_delete": "Confirmer la suppression",
+  "delete_category_message": "Êtes-vous sûr de vouloir supprimer cette catégorie? Tous les enregistrements liés seront supprimés.",
+  "confirm": "Confirmer"
 }

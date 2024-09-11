@@ -132,6 +132,37 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   }
 
   void _deleteCategory(int id, bool isExpense) async {
+  String categoryType = isExpense
+      ? (AppLocalizations.of(context)?.translate('expense') ?? 'Expense')
+      : (AppLocalizations.of(context)?.translate('income') ?? 'Income');
+  
+  bool? confirmDelete = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text(AppLocalizations.of(context)?.translate('confirm_delete') ?? 'Confirm Deletion'),
+        content: Text(AppLocalizations.of(context)?.translate('delete_category_message') ??
+            'Are you sure you want to delete this $categoryType category? All related records will have their category set to 0.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);  // User canceled
+            },
+            child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);  // User confirmed
+            },
+            child: Text(AppLocalizations.of(context)?.translate('confirm') ?? 'Confirm'),
+          ),
+        ],
+      );
+    },
+  );
+
+  // If the user confirmed deletion, proceed with the actual deletion
+  if (confirmDelete == true) {
     if (isExpense) {
       await _expenseCategoryDao.deleteCategory(id);
     } else {
@@ -139,6 +170,7 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
     }
     _loadCategories();
   }
+}
 
   @override
   Widget build(BuildContext context) {

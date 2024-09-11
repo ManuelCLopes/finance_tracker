@@ -4,19 +4,8 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-def localProperties = new Properties()
-def localPropertiesFile = rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader("UTF-8") { reader ->
-        localProperties.load(reader)
-    }
-}
-
-def flutterVersionCode = localProperties.getProperty("flutter.versionCode", "1")
-def flutterVersionName = localProperties.getProperty("flutter.versionName", "1.0")
-
 android {
-    namespace = "com.example.finance_tracker"
+    namespace = "com.manuellopes.finance_tracker"
     compileSdkVersion 34
 
     ndkVersion = flutter.ndkVersion
@@ -27,16 +16,31 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.finance_tracker"
+        applicationId "com.manuellopes.finance_tracker"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        versionCode 2 // Definir versão diretamente aqui
+        versionName "1.1.0" // Definir o nome da versão diretamente aqui
+    }
+
+    signingConfigs {
+       release {
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+            storeFile file(System.getenv("KEYSTORE_PATH"))
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+        }
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk {
+                debugSymbolLevel 'SYMBOL_TABLE'
+            }
         }
     }
 }

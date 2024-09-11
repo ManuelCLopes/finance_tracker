@@ -96,5 +96,8 @@
   "weekly": "Semanal",
   "monthly": "Mensual",
   "unschedule_backup": "Cancelar Copia de Seguridad",
-  "view_on_web": "Ver en la Web"
+  "view_on_web": "Ver en la Web",
+  "confirm_delete": "Confirmar eliminación",
+  "delete_category_message": "¿Estás seguro de que quieres eliminar esta categoría? Todos los registros relacionados serán eliminados.",
+  "confirm": "Confirmar"  
 }

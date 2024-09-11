@@ -96,5 +96,8 @@
   "weekly": "Weekly",
   "monthly": "Monthly",
   "unschedule_backup": "Unschedule Backup",
-  "view_on_web": "View on Web"
+  "view_on_web": "View on Web",
+  "confirm_delete": "Confirm Deletion",
+  "delete_category_message": "Are you sure you want to delete this category? All related records will be deleted.",
+  "confirm": "Confirm"
 }

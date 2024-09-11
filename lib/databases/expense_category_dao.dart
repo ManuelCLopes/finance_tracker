@@ -30,11 +30,19 @@ class ExpenseCategoryDao {
 
   Future<void> deleteCategory(int id) async {
     final db = await _dbHelper.database;
-    await db.delete(
-      'expense_categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.transaction((txn) async {
+      await txn.delete(
+        'expenses',
+        where: 'category_id = ?',
+        whereArgs: [id],
+      );
+
+      await txn.delete(
+        'expense_categories',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 
   Future<List<ExpenseCategory>> getExpenseCategories() async {

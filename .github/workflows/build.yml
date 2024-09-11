@@ -1,0 +1,38 @@
+name: Flutter Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: |
+          flutter build apk --release \
+          --dart-define=KEY_ALIAS=${{ secrets.KEY_ALIAS }} \
+          --dart-define=STORE_PASSWORD=${{ secrets.STORE_PASSWORD }} \
+          --dart-define=KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload APK to GitHub Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk

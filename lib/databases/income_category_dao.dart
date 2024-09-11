@@ -30,11 +30,20 @@ class IncomeCategoryDao {
 
   Future<void> deleteCategory(int id) async {
     final db = await _dbHelper.database;
-    await db.delete(
-      'income_categories',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+
+    await db.transaction((txn) async {
+      await txn.delete(
+        'incomes',
+        where: 'category_id = ?',
+        whereArgs: [id],
+      );
+
+      await txn.delete(
+        'income_categories',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    });
   }
 
 }

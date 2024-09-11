@@ -33,8 +33,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
   final ExpenseCategoryDao _expenseCategoryDao = ExpenseCategoryDao();
   final IncomeCategoryDao _incomeCategoryDao = IncomeCategoryDao();
 
-  double _totalIncome = 0.0;
-  double _totalExpenses = 0.0;
   double _totalInvestments = 0.0;
   double _netWorth = 0.0;
   bool _hasData = true;
@@ -49,7 +47,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   List<dynamic> _lastTransactions = [];
   Map<int, String> _expenseCategoryMap = {};
   Map<int, String> _incomeCategoryMap = {};
-  PageController _pageController = PageController(initialPage: 0);
+  final PageController _pageController = PageController(initialPage: 0);
 
   double _pageViewIncome = 0.0;
   double _pageViewExpenses = 0.0;
@@ -135,8 +133,6 @@ class _OverviewScreenState extends State<OverviewScreen> {
     double netWorth = totalIncome - totalExpenses + totalInvestments - totalInvested;
 
     setState(() {
-      _totalIncome = totalIncome;
-      _totalExpenses = totalExpenses;
       _totalInvestments = totalInvestments;
       _netWorth = netWorth;
     });
