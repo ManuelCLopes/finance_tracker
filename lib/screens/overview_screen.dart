@@ -19,7 +19,6 @@ import '../utils/currency_utils.dart';
 import '../utils/theme_pie_chart.dart';
 
 class OverviewScreen extends StatefulWidget {
-
   final Key? key;
   const OverviewScreen({this.key}) : super(key: key);
 
@@ -42,9 +41,19 @@ class _OverviewScreenState extends State<OverviewScreen> {
   bool _isLoading = true;
   String _currencySymbol = '\$'; // Default currency symbol
 
+  DateTime _selectedDate = DateTime.now(); // Default to current month
+
+  List<Income> _incomes = [];
+  List<Expense> _expenses = [];
+  List<Investment> _investments = [];
   List<dynamic> _lastTransactions = [];
   Map<int, String> _expenseCategoryMap = {};
   Map<int, String> _incomeCategoryMap = {};
+  PageController _pageController = PageController(initialPage: 0);
+
+  double _pageViewIncome = 0.0;
+  double _pageViewExpenses = 0.0;
+  double _pageViewInvestments = 0.0;
 
   @override
   void didChangeDependencies() {
@@ -57,93 +66,143 @@ class _OverviewScreenState extends State<OverviewScreen> {
       _isLoading = true;
     });
 
-    // Load categories
     List<ExpenseCategory> expenseCategories = await _expenseCategoryDao.getAllCategories();
     List<IncomeCategory> incomeCategories = await _incomeCategoryDao.getAllCategories();
 
-    // Map category IDs to their names
     _expenseCategoryMap = {for (var category in expenseCategories) category.id!: category.name};
     _incomeCategoryMap = {for (var category in incomeCategories) category.id!: category.name};
 
-    // Load transactions (consider fetching only the recent 10 transactions at the database level)
-    List<Income> incomes = await _incomeDao.getAllIncomes();
-    List<Expense> expenses = await _expenseDao.getAllExpenses();
-    List<Investment> investments = await _investmentDao.getAllInvestments();
+    _incomes = await _incomeDao.getAllIncomes();
+    _expenses = await _expenseDao.getAllExpenses();
+    _investments = await _investmentDao.getAllInvestments();
 
-    // Load the currency symbol
     _currencySymbol = await CurrencyUtils.getCurrencySymbol();
 
-    double totalIncome = incomes.fold(0.0, (sum, income) => sum + income.amount - income.taxAmount);
-    double totalExpenses = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
-    double totalInvestments = investments.fold(0.0, (sum, investment) => sum + (investment.currentValue ?? 0.0));
-    double netWorth = totalIncome - totalExpenses + totalInvestments;
+    _calculateFixedData();
+    _loadLastTransactions();
+    _filterChartDataByMonth(_selectedDate);
 
-    // Combine, sort, and then take only the last 10 transactions
+    setState(() {
+      _hasData = _incomes.isNotEmpty || _expenses.isNotEmpty || _investments.isNotEmpty;
+      _isLoading = false;
+    });
+  }
+
+  void _loadLastTransactions() {
     List<dynamic> transactions = [
-      ...expenses,
-      ...incomes,
-      ...investments,
-    ]..sort((a, b) {
-        DateTime dateA, dateB;
-        if (a is Expense) {
-          dateA = DateTime.parse(a.dateSpent);
-        } else if (a is Income) {
-          dateA = DateTime.parse(a.dateReceived);
-        } else {
-          dateA = DateTime.parse((a as Investment).dateInvested);
-        }
+      ..._incomes,
+      ..._expenses,
+      ..._investments,
+    ];
 
-        if (b is Expense) {
-          dateB = DateTime.parse(b.dateSpent);
-        } else if (b is Income) {
-          dateB = DateTime.parse(b.dateReceived);
-        } else {
-          dateB = DateTime.parse((b as Investment).dateInvested);
-        }
-        return dateB.compareTo(dateA); // Sort by most recent first
-      });
+    transactions.sort((a, b) {
+      DateTime dateA;
+      DateTime dateB;
 
-    // Limit the transactions to the last 10
-    _lastTransactions = transactions.take(10).toList();
+      if (a is Income) {
+        dateA = DateTime.parse(a.dateReceived);
+      } else if (a is Expense) {
+        dateA = DateTime.parse(a.dateSpent);
+      } else if (a is Investment) {
+        dateA = DateTime.parse(a.dateInvested);
+      } else {
+        return 0; // Fallback in case of unexpected data
+      }
+
+      if (b is Income) {
+        dateB = DateTime.parse(b.dateReceived);
+      } else if (b is Expense) {
+        dateB = DateTime.parse(b.dateSpent);
+      } else if (b is Investment) {
+        dateB = DateTime.parse(b.dateInvested);
+      } else {
+        return 0;
+      }
+
+      return dateB.compareTo(dateA); // Sort by most recent first
+    });
+
+    setState(() {
+      _lastTransactions = transactions.take(10).toList(); // Show last 10 transactions
+    });
+  }
+
+  void _calculateFixedData() {
+    double totalIncome = _incomes.fold(0.0, (sum, income) => sum + income.amount - income.taxAmount);
+    double totalExpenses = _expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+    double totalInvestments = _investments.fold(0.0, (sum, investment) => sum + (investment.currentValue ?? 0.0));
+    double totalInvested = _investments.fold(0.0, (sum, investment) => sum + (investment.initialValue));
+    double netWorth = totalIncome - totalExpenses + totalInvestments - totalInvested;
 
     setState(() {
       _totalIncome = totalIncome;
       _totalExpenses = totalExpenses;
       _totalInvestments = totalInvestments;
       _netWorth = netWorth;
-      _hasData = incomes.isNotEmpty || expenses.isNotEmpty || investments.isNotEmpty;
-      _isLoading = false;
     });
+  }
+
+  void _filterChartDataByMonth(DateTime selectedDate) {
+    final int selectedMonth = selectedDate.month;
+    final int selectedYear = selectedDate.year;
+
+    final filteredIncomes = _incomes.where((income) {
+      final incomeDate = DateTime.parse(income.dateReceived);
+      return incomeDate.month == selectedMonth && incomeDate.year == selectedYear;
+    }).toList();
+
+    final filteredExpenses = _expenses.where((expense) {
+      final expenseDate = DateTime.parse(expense.dateSpent);
+      return expenseDate.month == selectedMonth && expenseDate.year == selectedYear;
+    }).toList();
+
+    final filteredInvestments = _investments.where((investment) {
+      final investmentDate = DateTime.parse(investment.dateInvested);
+      return investmentDate.month == selectedMonth && investmentDate.year == selectedYear;
+    }).toList();
+
+    double totalIncome = filteredIncomes.fold(0.0, (sum, income) => sum + income.amount - income.taxAmount);
+    double totalExpenses = filteredExpenses.fold(0.0, (sum, expense) => sum + expense.amount);
+    double totalInvestments = filteredInvestments.fold(0.0, (sum, investment) => sum + (investment.currentValue ?? 0.0));
+
+    setState(() {
+      _pageViewIncome = totalIncome;
+      _pageViewExpenses = totalExpenses;
+      _pageViewInvestments = totalInvestments;
+    });
+  }
+
+  void _onPageChanged(int pageIndex) {
+    final DateTime newDate = DateTime.now().subtract(Duration(days: pageIndex * 30));
+    setState(() {
+      _selectedDate = newDate;
+    });
+    _filterChartDataByMonth(newDate);
   }
 
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final ThemeData theme = Theme.of(context);
-    final bool isLightMode = theme.brightness == Brightness.light;
-
-    // Choose the appropriate SVG file based on the theme
-    final String assetName = isLightMode
-        ? 'assets/images/savings_light.svg'
-        : 'assets/images/savings_dark.svg';
 
     return AppScaffold(
       title: localizations?.translate('overview_title') ?? 'Overview',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _hasData ? _buildDataContent(localizations!) : _buildNoDataContent(assetName, localizations!),
+          : _hasData
+              ? _buildContent(localizations!)
+              : _buildNoDataContent(),
       floatingActionButton: _hasData ? _buildFloatingActionButton(localizations!) : null,
     );
   }
 
-  Widget _buildDataContent(AppLocalizations localizations) {
+  Widget _buildContent(AppLocalizations localizations) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) _buildIncomeVsExpensesSummary(localizations),
-          if (_totalIncome > 0 || _totalExpenses > 0 || _totalInvestments > 0) const SizedBox(height: 16),
+          _buildIncomeVsExpensesChart(localizations),
+          const SizedBox(height: 16),
           _buildNetWorthSummary(localizations),
           const SizedBox(height: 8),
           _buildInvestmentSummary(localizations),
@@ -154,64 +213,68 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
-  Widget _buildNoDataContent(String assetName, AppLocalizations localizations) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              localizations.translate('no_data_message'),
-              style: const TextStyle(fontSize: 18, color: Colors.grey),
-              textAlign: TextAlign.center,
+  Widget _buildIncomeVsExpensesChart(AppLocalizations localizations) {
+    final ThemeData theme = Theme.of(context);
+    final bool isLightMode = theme.brightness == Brightness.light;
+    final String assetName = isLightMode
+        ? 'assets/images/savings_light.svg'
+        : 'assets/images/savings_dark.svg';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.topLeft, // Align center to make it neat and minimalistic
+          child: Chip(
+            label: Text(
+              _formatMonth(_selectedDate), // Minimal format for the selected month
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
             ),
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Use primary color for better visibility
           ),
-          const SizedBox(height: 48),
-          SvgPicture.asset(
-            assetName,
-            width: 200,
-            height: 200,
+        ),
+        SizedBox(
+          height: 270, // Adjust height to fit chart and month label
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: _onPageChanged,
+            itemCount: 12, // Number of months to show
+            itemBuilder: (context, index) {
+              if (_pageViewIncome == 0.0 && _pageViewExpenses == 0.0 && _pageViewInvestments == 0.0) {
+                return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SvgPicture.asset(
+                      assetName,
+                      width: 180,
+                      height: 180,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      localizations.translate('no_data'),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              );
+              } else {
+                return ThemedPieChart(
+                  incomeValue: _pageViewIncome,
+                  expenseValue: _pageViewExpenses,
+                  investedValue: _pageViewInvestments,
+                  currencySymbol: _currencySymbol,
+                );
+              }
+            },
           ),
-          const SizedBox(height: 60),
-          _buildNoDataButton(localizations.translate('add_first_income'), IncomeForm()),
-          const SizedBox(height: 16),
-          _buildNoDataButton(localizations.translate('add_first_expense'), const ExpenseForm()),
-          const SizedBox(height: 16),
-          _buildNoDataButton(localizations.translate('add_first_investment'), InvestmentForm()),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  ElevatedButton _buildNoDataButton(String text, Widget form) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => form),
-        );
-      },
-      child: Text(text),
-    );
-  }
-
-  FloatingActionButton _buildFloatingActionButton(AppLocalizations localizations) {
-    return FloatingActionButton(
-      onPressed: () {
-        _showAddOptions(context, localizations);
-      },
-      child: const Icon(Icons.add),
-    );
-  }
-
-  Widget _buildIncomeVsExpensesSummary(AppLocalizations localizations) {
-    return ThemedPieChart(
-      incomeValue: _totalIncome,
-      expenseValue: _totalExpenses,
-      investedValue: _totalInvestments, 
-      currencySymbol: _currencySymbol,
-    );
+  String _formatMonth(DateTime date) {
+    return "${date.month.toString().padLeft(2, '0')}-${date.year}"; // Format: 08-2023
   }
 
   Widget _buildNetWorthSummary(AppLocalizations localizations) {
@@ -330,6 +393,63 @@ class _OverviewScreenState extends State<OverviewScreen> {
               : null,
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildNoDataContent() {
+    final ThemeData theme = Theme.of(context);
+    final bool isLightMode = theme.brightness == Brightness.light;
+    final String assetName = isLightMode
+        ? 'assets/images/savings_light.svg'
+        : 'assets/images/savings_dark.svg';
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              'No Data Available',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 48),
+          SvgPicture.asset(
+            assetName,
+            width: 200,
+            height: 200,
+          ),
+          const SizedBox(height: 60),
+          _buildNoDataButton('Add First Income', IncomeForm()),
+          const SizedBox(height: 16),
+          _buildNoDataButton('Add First Expense', const ExpenseForm()),
+          const SizedBox(height: 16),
+          _buildNoDataButton('Add First Investment', InvestmentForm()),
+        ],
+      ),
+    );
+  }
+
+  ElevatedButton _buildNoDataButton(String text, Widget form) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => form),
+        );
+      },
+      child: Text(text),
+    );
+  }
+
+  FloatingActionButton _buildFloatingActionButton(AppLocalizations localizations) {
+    return FloatingActionButton(
+      onPressed: () {
+        _showAddOptions(context, localizations);
+      },
+      child: const Icon(Icons.add),
     );
   }
 
