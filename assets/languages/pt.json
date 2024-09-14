@@ -99,5 +99,13 @@
   "view_on_web": "Ver na Web",
   "confirm_delete": "Confirmar eliminação",
   "delete_category_message": "Tem a certeza de que deseja eliminar esta categoria? Todos os registos relacionados serão apagados.",
-  "confirm": "Confirmar"
+  "confirm": "Confirmar",
+  "qrCodeTitle": "Informações do Código QR",
+  "qrCodeInfo": "O código QR é único e gerado na aplicação web do Finance Dashboard para visualizar os seus dados financeiros a partir de diferentes perspetivas.",
+  "okButton": "OK",
+  "scanQrCode": "Scanear Código QR",
+  "sessionIdMissing": "O ID da sessão está em falta! Por favor, escaneie o código QR novamente.",
+  "dataSentSuccess": "Dados enviados com sucesso!",
+  "dataSendFailed": "Falha ao enviar os dados",
+  "dataSendError": "Ocorreu um erro!"
 }

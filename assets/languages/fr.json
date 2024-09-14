@@ -99,5 +99,13 @@
   "view_on_web": "Afficher sur le Web",
   "confirm_delete": "Confirmer la suppression",
   "delete_category_message": "Êtes-vous sûr de vouloir supprimer cette catégorie? Tous les enregistrements liés seront supprimés.",
-  "confirm": "Confirmer"
+  "confirm": "Confirmer",
+  "qrCodeTitle": "Informations sur le Code QR",
+  "qrCodeInfo": "Le code QR est unique et généré dans l'application web Finance Dashboard pour afficher vos données financières sous différents angles.",
+  "okButton": "OK",
+  "scanQrCode": "Scanner le Code QR",
+  "sessionIdMissing": "L'identifiant de session est manquant! Veuillez scanner à nouveau le code QR.",
+  "dataSentSuccess": "Données envoyées avec succès!",
+  "dataSendFailed": "Échec de l'envoi des données",
+  "dataSendError": "Une erreur s'est produite!"
 }

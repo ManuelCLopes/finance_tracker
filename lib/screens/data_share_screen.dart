@@ -1,3 +1,4 @@
+import 'package:finance_tracker/services/app_localizations_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -5,6 +6,8 @@ import 'package:qr_code_scanner/qr_code_scanner.dart';
 import '../databases/database_helper.dart';
 
 class DataEntryScreen extends StatefulWidget {
+  const DataEntryScreen({super.key});
+
   @override
   _DataEntryScreenState createState() => _DataEntryScreenState();
 }
@@ -57,7 +60,7 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
     if (sessionId.isEmpty) {
       if (!mounted) return; // Stop if the widget is no longer mounted
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session ID is missing! Please scan the QR code again.')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.translate('sessionIdMissing'))),
       );
       return;
     }
@@ -67,7 +70,7 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
     List<Map<String, dynamic>> incomes = await _dbHelper.getAllIncomes();
     List<Map<String, dynamic>> investments = await _dbHelper.getAllInvestments();
 
-    final Uri url = Uri.parse('http://192.168.1.78:8000/receive_all_data/');
+    final Uri url = Uri.parse('https://finance-tracker-5c42401d1c26.herokuapp.com/receive_all_data/');
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Cookie': 'sessionid=$sessionId',
@@ -86,14 +89,14 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
         print('Data sent successfully!');
         if (mounted) { // Check if widget is still mounted
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Data sent successfully!')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.translate('dataSentSuccess'))),
           );
         }
       } else {
         print('Failed to send data: ${response.body}');
         if (mounted) { // Check if widget is still mounted
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to send data: ${response.body}')),
+            SnackBar(content: Text(AppLocalizations.of(context)!.translate('dataSendFailed'))),
           );
         }
       }
@@ -101,17 +104,46 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
       print('Error sending data: $error');
       if (mounted) { // Check if widget is still mounted
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occurred!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.translate('dataSendError'))),
         );
       }
     }
+  }
+
+  // Function to show the information dialog
+  void _showInfoDialog() {
+    String message = AppLocalizations.of(context)!.translate('qrCodeInfo');
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.translate('qrCodeTitle')),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text(AppLocalizations.of(context)!.translate('okButton')),
+              onPressed: () {
+                Navigator.of(context).pop();  // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan QR Code'),
+        title: Text(AppLocalizations.of(context)!.translate('scanQrCode')),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.help_outline), 
+            onPressed: _showInfoDialog,
+          ),
+        ],
       ),
       body: Column(
         children: [

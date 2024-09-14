@@ -99,5 +99,13 @@
   "view_on_web": "View on Web",
   "confirm_delete": "Confirm Deletion",
   "delete_category_message": "Are you sure you want to delete this category? All related records will be deleted.",
-  "confirm": "Confirm"
+  "confirm": "Confirm",
+  "qrCodeTitle": "QR Code Information",
+  "qrCodeInfo": "The QR code is unique and generated in the Finance Dashboard web app to view your financial data from different perspectives.",
+  "okButton": "OK",
+  "scanQrCode": "Scan QR Code",
+  "sessionIdMissing": "Session ID is missing! Please scan the QR code again.",
+  "dataSentSuccess": "Data sent successfully!",
+  "dataSendFailed": "Failed to send data",
+  "dataSendError": "An error occurred!"
 }
