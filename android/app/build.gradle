@@ -8,19 +8,19 @@ android {
     namespace = "com.manuellopes.finance_tracker"
     compileSdkVersion 34
 
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = flutter.ndkVersion ?: "23.1.7779620"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     defaultConfig {
         applicationId "com.manuellopes.finance_tracker"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 2 // Definir versão diretamente aqui
-        versionName "1.1.0" // Definir o nome da versão diretamente aqui
+        versionCode 2 
+        versionName "1.1.0" 
     }
 
     signingConfigs {
