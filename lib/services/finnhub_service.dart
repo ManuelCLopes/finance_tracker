@@ -11,7 +11,7 @@ class FinnhubService {
   // Fetch real-time stock data by symbol and convert to the desired currency
   static Future<double?> getRealTimeData(String symbol) async {
     final url = '$_baseUrl/quote?symbol=$symbol&token=$_apiKey';
-    final String currencySymbol = await CurrencyUtils.getCurrencySymbol(); // Get the currency symbol used in the app
+    final String currencySymbol = await CurrencyUtils.getCurrencyLabel(); // Get the currency used in the app
 
     try {
       // Fetch stock price in the original currency
