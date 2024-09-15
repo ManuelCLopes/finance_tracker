@@ -276,6 +276,27 @@ class _InvestmentFormState extends State<InvestmentForm> {
                   },
                 ),
                 const SizedBox(height: 16),
+                if (_selectedType == 'Constant Return' || _selectedType == 'Other')
+                  TextFormField(
+                    controller: _annualReturnController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('annual_return'),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[,|.]?\d*')),
+                    ],
+                    validator: (value) {
+                      if (value != null && value.isNotEmpty) {
+                        final number = double.tryParse(value.replaceAll(',', '.'));
+                        if (number == null) {
+                          return AppLocalizations.of(context)?.translate('enter_valid_return');
+                        }
+                      }
+                      return null;
+                    },
+                  ),
+                const SizedBox(height: 16),
                 if (_selectedType == 'Stocks' || _selectedType == 'ETFs' || _selectedType == 'Cryptocurrency')
                   TextFormField(
                     controller: _quantityController,
