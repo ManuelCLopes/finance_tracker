@@ -1,3 +1,4 @@
+import 'package:finance_tracker/utils/value_visibility_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:finance_tracker/screens/expense_form.dart';
@@ -27,6 +28,7 @@ class OverviewScreen extends StatefulWidget {
 }
 
 class _OverviewScreenState extends State<OverviewScreen> {
+  
   final ExpenseDao _expenseDao = ExpenseDao();
   final IncomeDao _incomeDao = IncomeDao();
   final InvestmentDao _investmentDao = InvestmentDao();
@@ -52,6 +54,20 @@ class _OverviewScreenState extends State<OverviewScreen> {
   double _pageViewIncome = 0.0;
   double _pageViewExpenses = 0.0;
   double _pageViewInvestments = 0.0;
+
+  bool _isValueHidden = false;
+
+  @override
+  void initState() {
+    super.initState(); 
+    _loadVisibilityPreferences(); 
+    _loadData();
+  }
+
+  Future<void> _loadVisibilityPreferences() async {
+    _isValueHidden = await ValueVisibilityService.loadVisibilityPreference('isHidden');
+    setState(() {});
+  }
 
   @override
   void didChangeDependencies() {
@@ -176,6 +192,13 @@ class _OverviewScreenState extends State<OverviewScreen> {
     _filterChartDataByMonth(newDate);
   }
 
+  Future<void> _toggleValuesVisibility() async {
+    setState(() {
+      _isValueHidden = !_isValueHidden;
+    });
+    await ValueVisibilityService.saveVisibilityPreference('isHidden', _isValueHidden);
+  }
+
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
@@ -274,34 +297,43 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   Widget _buildNetWorthSummary(AppLocalizations localizations) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              localizations.translate('current_net_worth'),
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            Text(
-              '${_netWorth.toStringAsFixed(2)} $_currencySymbol',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 123, 122, 122),
+    return InkWell(
+      splashColor: Colors.transparent, 
+      highlightColor: Colors.transparent,
+      onTap: _toggleValuesVisibility,
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                localizations.translate('current_net_worth'),
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-            ),
-          ],
+              Text(
+                _isValueHidden ? '***********' : '${_netWorth.toStringAsFixed(2)} $_currencySymbol',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 123, 122, 122),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildInvestmentSummary(AppLocalizations localizations) {
-    return Card(
+    return InkWell(
+      splashColor: Colors.transparent, 
+      highlightColor: Colors.transparent,
+      onTap: _toggleValuesVisibility, 
+      child: Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -314,7 +346,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             Text(
-              '${_totalInvestments.toStringAsFixed(2)} $_currencySymbol',
+              _isValueHidden ? '***********' : '${_totalInvestments.toStringAsFixed(2)} $_currencySymbol',
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -324,6 +356,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
           ],
         ),
       ),
+    ), 
     );
   }
 

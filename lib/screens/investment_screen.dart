@@ -1,3 +1,4 @@
+import 'package:finance_tracker/utils/value_visibility_utils.dart';
 import 'package:flutter/material.dart';
 import '../models/investment.dart';
 import '../databases/investment_dao.dart';
@@ -26,10 +27,18 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
   double _totalCurrentValue = 0.0;
   double _percentageChange = 0.0;
 
+  bool _isValueHidden = false;
+
   @override
   void initState() {
-    super.initState();
+    super.initState(); 
+    _loadVisibilityPreferences(); 
     _loadData();
+  }
+
+  Future<void> _loadVisibilityPreferences() async {
+    _isValueHidden = await ValueVisibilityService.loadVisibilityPreference('isHidden');
+    setState(() {});
   }
 
   Future<void> _loadData() async {
@@ -76,7 +85,6 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
           updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
         }
       }
-      // Handle other investment types...
     }
 
     setState(() {
@@ -172,47 +180,59 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     );
   }
 
+  Future<void> _toggleValuesVisibility() async {
+    setState(() {
+      _isValueHidden = !_isValueHidden;
+    });
+    await ValueVisibilityService.saveVisibilityPreference('isHidden', _isValueHidden);
+  }
+
   Widget _buildSummaryCard(BuildContext context, AppLocalizations? localizations) {
     final Color percentageColor = _percentageChange >= 0 ? Colors.green : Colors.red;
 
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      margin: const EdgeInsets.only(bottom: 16.0), // Space below the card
-      child: Padding(
-        padding: const EdgeInsets.all(16.0), // Inner padding for content
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Label Text
-            Text(
-              localizations!.translate('total_invested'),
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            // Value and Percentage Column
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${_totalInvested.toStringAsFixed(2)} $_currencySymbol',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 4), // Space between value and percentage
-                Text(
-                  '${_percentageChange.toStringAsFixed(2)} %',
-                  style: TextStyle(
-                    color: percentageColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return InkWell(
+      splashColor: Colors.transparent, 
+      highlightColor: Colors.transparent,
+      onTap: _toggleValuesVisibility,
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-      ),
+        margin: const EdgeInsets.only(bottom: 16.0), // Space below the card
+        child: Padding(
+          padding: const EdgeInsets.all(16.0), // Inner padding for content
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Label Text
+              Text(
+                localizations!.translate('total_invested'),
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              // Value and Percentage Column
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _isValueHidden ? '***********' : '${_totalInvested.toStringAsFixed(2)} $_currencySymbol',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 4), // Space between value and percentage
+                  Text(
+                    '${_percentageChange.toStringAsFixed(2)} %',
+                    style: TextStyle(
+                      color: percentageColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ), 
     );
   }
 
