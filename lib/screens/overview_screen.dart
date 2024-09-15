@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:finance_tracker/screens/expense_form.dart';
 import 'package:finance_tracker/screens/income_form.dart';
 import 'package:finance_tracker/screens/investment_form.dart';
+import 'package:intl/intl.dart';
 import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../databases/income_category_dao.dart';
@@ -243,7 +244,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Align(
-          alignment: Alignment.topLeft, // Align center to make it neat and minimalistic
+          alignment: Alignment.topCenter, // Align center to make it neat and minimalistic
           child: Chip(
             label: Text(
               _formatMonth(_selectedDate), // Minimal format for the selected month
@@ -293,7 +294,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   }
 
   String _formatMonth(DateTime date) {
-    return "${date.month.toString().padLeft(2, '0')}-${date.year}"; // Format: 08-2023
+    return DateFormat('MMMM yyyy').format(date);
   }
 
   Widget _buildNetWorthSummary(AppLocalizations localizations) {
