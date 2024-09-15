@@ -9,12 +9,11 @@ class CryptoService {
   Future<Map<String, dynamic>?> getCryptoDetails(String symbol) async {
     try {
       final String cryptoId = _convertSymbolToId(symbol);
-      final String currencySymbol = await CurrencyUtils.getCurrencySymbol(); // Get the currency symbol used in the app
-      final String currencyCode = _convertSymbolToCurrencyCode(currencySymbol); // Convert symbol to currency code
+      final String currencyLabel = await CurrencyUtils.getCurrencyLabel(); // Get the currency used in the app
 
       // Fetch price data with an API key
       final response = await http.get(
-        Uri.parse('$_baseUrl/simple/price?ids=$cryptoId&vs_currencies=$currencyCode'),
+        Uri.parse('$_baseUrl/simple/price?ids=$cryptoId&vs_currencies=$currencyLabel'),
         headers: {
           'x-cg-demo-api-key': _apiKey,
         },
@@ -25,7 +24,7 @@ class CryptoService {
         if (data.isNotEmpty && data[cryptoId] != null) {
           return {
             'name': _capitalize(cryptoId),  // Capitalize the first letter
-            'current_price': data[cryptoId][currencyCode.toLowerCase()],
+            'current_price': data[cryptoId][currencyLabel.toLowerCase()],
           };
         }
       } else {
@@ -49,13 +48,4 @@ class CryptoService {
 
   String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 
-  String _convertSymbolToCurrencyCode(String symbol) {
-    final Map<String, String> symbolToCode = {
-      '\$': 'usd',
-      '€': 'eur',
-      '£': 'gbp',
-      // Add more mappings as needed
-    };
-    return symbolToCode[symbol] ?? 'usd'; // Default to USD if no mapping exists
-  }
 }

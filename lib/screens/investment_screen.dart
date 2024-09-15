@@ -1,3 +1,4 @@
+import 'package:finance_tracker/services/crypto_service.dart';
 import 'package:finance_tracker/utils/value_visibility_utils.dart';
 import 'package:flutter/material.dart';
 import '../models/investment.dart';
@@ -66,13 +67,15 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
     double updatedTotalCurrentValue = 0.0;
 
     for (var investment in _investments) {
-      if (investment.investmentType == 'Stocks') {
+      if (investment.investmentType == 'Stocks' || investment.investmentType == 'ETFs') {
         final currentPrice = await _fetchRealTimeData(investment.symbol);
         if (currentPrice != null) {
-          final currentValue = (investment.quantity! * currentPrice).roundToDouble();
+          final quantity = investment.initialValue / currentPrice;
+          final currentValue = (quantity * currentPrice).roundToDouble();
           updatedTotalCurrentValue += currentValue;
 
           Investment updatedInvestment = investment.copyWith(
+            quantity: quantity,
             currentValue: currentValue,
           );
 
@@ -84,6 +87,42 @@ class _InvestmentScreenState extends State<InvestmentScreen> {
         } else {
           updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
         }
+      } else if (investment.investmentType == 'Cryptocurrency') {
+        final cryptoDetails = await CryptoService().getCryptoDetails(investment.symbol ?? '');
+        if (cryptoDetails != null) {
+          final cryptoPrice = cryptoDetails['current_price']?.toDouble() ?? 1.0;
+          final quantity = investment.initialValue / cryptoPrice;
+          final currentValue = (quantity * cryptoPrice).roundToDouble();
+          updatedTotalCurrentValue += currentValue;
+
+          Investment updatedInvestment = investment.copyWith(
+            quantity: quantity,
+            currentValue: currentValue,
+          );
+
+          await _investmentDao.updateInvestment(updatedInvestment);
+
+          setState(() {
+            _investments[_investments.indexOf(investment)] = updatedInvestment;
+          });
+        } else {
+          updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
+        }
+      } else if (investment.investmentType == 'Constant Return') {
+        final currentValue = _calculateConstantReturnCurrentValue(investment);
+        updatedTotalCurrentValue += currentValue;
+
+        Investment updatedInvestment = investment.copyWith(
+          currentValue: currentValue,
+        );
+
+        await _investmentDao.updateInvestment(updatedInvestment);
+
+        setState(() {
+          _investments[_investments.indexOf(investment)] = updatedInvestment;
+        });
+      } else {
+        updatedTotalCurrentValue += investment.currentValue ?? investment.initialValue;
       }
     }
 
