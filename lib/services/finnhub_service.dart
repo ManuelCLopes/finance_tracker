@@ -1,10 +1,11 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 import '../utils/currency_utils.dart';
 
 class FinnhubService {
-  static const String _apiKey = 'cr3gelpr01qk9rv5l7sgcr3gelpr01qk9rv5l7t0';
+  static final String _apiKey = dotenv.env['FINNHUB_API_KEY']!;
   static const String _baseUrl = 'https://finnhub.io/api/v1';
   static const String _exchangeRateApiUrl = 'https://api.exchangerate-api.com/v4/latest';
 

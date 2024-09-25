@@ -70,7 +70,7 @@ class _DataEntryScreenState extends State<DataEntryScreen> {
     List<Map<String, dynamic>> incomes = await _dbHelper.getAllIncomes();
     List<Map<String, dynamic>> investments = await _dbHelper.getAllInvestments();
 
-    final Uri url = Uri.parse('https://finance-tracker-5c42401d1c26.herokuapp.com/receive_all_data/');
+    final Uri url = Uri.parse('http://192.168.1.78:8000/receive_all_data/');
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
       'Cookie': 'sessionid=$sessionId',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +33,7 @@ Future<void> main() async {
     isInDebugMode: false,  // Set to true for debugging; false for release builds
   );
 
+  await dotenv.load();
   runApp(
     MultiProvider(
       providers: [
