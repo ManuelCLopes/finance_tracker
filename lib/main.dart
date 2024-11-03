@@ -33,8 +33,9 @@ Future<void> main() async {
     isInDebugMode: false,  // Set to true for debugging; false for release builds
   );
 
-  await dotenv.load();
-  runApp(
+  await dotenv.load(fileName: ".env");
+  
+    runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),

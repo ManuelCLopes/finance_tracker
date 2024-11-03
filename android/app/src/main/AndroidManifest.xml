@@ -6,7 +6,6 @@
 
     <application
         android:label="Finance Tracker"
-        android:name=".MainApplication"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
