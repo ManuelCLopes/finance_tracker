@@ -13,6 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+      - name: Clean Gradle cache
+        run: ./gradlew clean
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
