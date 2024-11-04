@@ -30,11 +30,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Clean Gradle cache
-        run: |
-          cd android
-          ./gradlew clean
-
       - name: Build APK
         run: |
           flutter build apk --release \
