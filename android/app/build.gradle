@@ -30,7 +30,7 @@ android {
     signingConfigs {
        release {
             keyAlias "admin"
-            keyPassword "admin"
+            keyPassword "admin1234"
             storeFile file("/Users/manuellopes/upload-keystore.jks") 
             storePassword "admin1234"
         }

@@ -1,7 +1,7 @@
 buildscript {
     ext {
         // Defina a versão do Kotlin que deseja utilizar
-        kotlin_version = '1.9.22' // Substitua pela versão mais recente compatível
+        kotlin_version = '1.7.10' // Substitua pela versão mais recente compatível
     }
     repositories {
         google()
