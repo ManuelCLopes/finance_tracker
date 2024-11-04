@@ -118,6 +118,39 @@ class DatabaseHelper {
   ''');
 }
 
+Future<List<Map<String, dynamic>>> getMonthlyAverageExpenses() async {
+  final db = await database;
+  return await db.rawQuery('''
+    SELECT 
+      expense_categories.name AS category,
+      ROUND(AVG(monthly_sum), 2) as monthly_average
+    FROM (
+      SELECT category_id, strftime('%Y-%m', date_spent) as month, SUM(amount) as monthly_sum
+      FROM expenses
+      GROUP BY category_id, month
+    ) as monthly_totals
+    JOIN expense_categories ON monthly_totals.category_id = expense_categories.id
+    GROUP BY category_id
+  ''');
+}
+
+Future<List<Map<String, dynamic>>> getLastMonthExpenses() async {
+  final db = await database;
+  DateTime now = DateTime.now();
+  DateTime lastMonth = DateTime(now.year, now.month - 1, 1); // First day of last month
+  DateTime thisMonth = DateTime(now.year, now.month, 1);     // First day of this month
+
+  return await db.rawQuery('''
+    SELECT 
+      expense_categories.name AS category,
+      SUM(expenses.amount) as total_last_month
+    FROM expenses
+    JOIN expense_categories ON expenses.category_id = expense_categories.id
+    WHERE expenses.date_spent >= ? AND expenses.date_spent < ?
+    GROUP BY expense_categories.name
+  ''', [lastMonth.toIso8601String(), thisMonth.toIso8601String()]);
+}
+
 Future<List<Map<String, dynamic>>> getAllIncomes() async {
   final db = await database;
   return await db.rawQuery('''
@@ -129,6 +162,35 @@ Future<List<Map<String, dynamic>>> getAllIncomes() async {
       incomes.tax_amount 
     FROM incomes
     JOIN income_categories ON incomes.category_id = income_categories.id 
+  ''');
+}
+
+Future<List<Map<String, dynamic>>> getMonthlyIncomeSums() async {
+  final db = await database;
+  return await db.rawQuery('''
+    SELECT 
+      IFNULL(STRFTIME('%m', date_received), '01') AS month,
+      SUM(amount) AS total_income
+    FROM incomes
+    JOIN income_categories ON incomes.category_id = income_categories.id
+    WHERE income_categories.name != 'default'
+    GROUP BY month
+    ORDER BY month
+  ''');
+}
+
+Future<List<Map<String, dynamic>>> getTop5IncomeSources() async {
+  final db = await database;
+  return await db.rawQuery('''
+    SELECT 
+      income_categories.name AS category,
+      SUM(incomes.amount) AS total_income
+    FROM incomes
+    JOIN income_categories ON incomes.category_id = income_categories.id
+    WHERE income_categories.name != 'default'
+    GROUP BY income_categories.name
+    ORDER BY total_income DESC
+    LIMIT 5
   ''');
 }
 
@@ -147,7 +209,17 @@ Future<List<Map<String, dynamic>>> getAllInvestments() async {
   ''');
   }
 
-
+  Future<List<Map<String, dynamic>>> getInvestmentSummaries() async {
+  final db = await database;
+  return await db.rawQuery('''
+    SELECT 
+      investments.investment_type AS type,
+      SUM(investments.initial_value) AS total_initial_value,
+      SUM(investments.current_value) AS total_current_value
+    FROM investments
+    GROUP BY investments.investment_type
+  ''');
+}
 
   Future<void> bulkInsert(
       String tableName, List<Map<String, dynamic>> data, Transaction txn) async {

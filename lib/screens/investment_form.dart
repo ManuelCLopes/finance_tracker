@@ -254,6 +254,21 @@ class _InvestmentFormState extends State<InvestmentForm> {
                     ),
                   const SizedBox(height: 16),
                 ],
+                if (_selectedType == 'Constant Return' || _selectedType == 'Other') ...[
+                  TextFormField(
+                    controller: _investmentProductController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)?.translate('investment_product'),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return AppLocalizations.of(context)?.translate('enter_investment_product');
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 TextFormField(
                   controller: _initialValueController,
                   decoration: InputDecoration(

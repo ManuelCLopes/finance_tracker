@@ -5,6 +5,7 @@ import 'package:finance_tracker/screens/expense_form.dart';
 import 'package:finance_tracker/screens/income_form.dart';
 import 'package:finance_tracker/screens/investment_form.dart';
 import 'package:intl/intl.dart';
+import '../charts/DataVisualizationScreen.dart';
 import '../databases/expense_category_dao.dart';
 import '../databases/expense_dao.dart';
 import '../databases/income_category_dao.dart';
@@ -206,6 +207,18 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
     return AppScaffold(
       title: localizations?.translate('overview_title') ?? 'Overview',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.bar_chart),
+          tooltip: localizations?.translate('view_data_visualization') ?? 'Visualizar Gráficos',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const DataVisualizationScreen()),
+            );
+          },
+        ),
+      ],
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _hasData
