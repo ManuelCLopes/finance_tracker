@@ -22,9 +22,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set JAVA_HOME
-        run: echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))" >> $GITHUB_ENV
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -32,6 +29,11 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Clean Gradle cache
+        run: |
+          cd android
+          ./gradlew clean
 
       - name: Build APK
         run: |
